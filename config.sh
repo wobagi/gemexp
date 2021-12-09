@@ -13,37 +13,34 @@ EXP_NAME="wb_gvp10"
 # CDR=code
 #
 # cp -vp $CDR/maingemclimdm_Linux_x86-64_3.3.2.Abs  maingemdm_Linux_x86-64_3.3.2.Abs
-# cp -vp $CDR/maingemclimntr_Linux_x86-64_3.3.2.Abs maingemntr_Linux_x86-64_3.3.2.Abs 
+# cp -vp $CDR/maingemclimntr_Linux_x86-64_3.3.2.Abs maingemntr_Linux_x86-64_3.3.2.Abs
 #
 # Static files:
 
 
-EXP_BASEDIR=/mnt/disk3/ocena/2020/
-EXP_NAME="hdd_gvp10"
+EXP_REMOTE=/mnt/disk3/ocena/2020/
+EXP_NAME="hdd_gvp10_test"
 #
 EXP=${BASEDIR}/${EXP_NAME}/exp_common
 NODES=${BASEDIR}/${EXP_NAME}/nodes
 
-EXP_LOCAL_DIR=.
-#/home/ocena/projects/gem332/hdd_gvp10
+EXP_LOCAL=/home/ocena/projects/gem332/hdd_gvp10/ic/
 
 #
-ln -s ${EXP} .
-ln -s ${EXP}/configexp.dot.cfg
-ln -s ${EXP}/input
+# ln -s ${EXP} .
+# ln -s ${EXP}/configexp.dot.cfg
+# ln -s ${EXP}/input
 #
-cp  ${EXP}/outcfg.out .
-cp  ${EXP}/*.sh .
+# cp  ${EXP}/outcfg.out .
+# cp  ${EXP}/*.sh .
 #
-cp  ${EXP}/run1 .
+# cp  ${EXP}/run1 .
 #
-cp ${EXP}/maingemdm_Linux_x86-64_3.3.2.Abs  .
-cp ${EXP}/maingemntr_Linux_x86-64_3.3.2.Abs .
+# cp ${EXP}/maingemdm_Linux_x86-64_3.3.2.Abs  .
+# cp ${EXP}/maingemntr_Linux_x86-64_3.3.2.Abs .
 #
-ln -s ${NODES}/${TRUE_HOST}        arc
-ln -s ${NODES}/${TRUE_HOST}/out    out 
-#
-ls -al
+# ln -s ${NODES}/${TRUE_HOST}        arc
+# ln -s ${NODES}/${TRUE_HOST}/out    out
 #
 IC=ic2019122600_gemaq
 #
@@ -78,7 +75,7 @@ echo 'gvp10_make_gem_settings_cam.sh: '${ETIKET}'   '${SOX}'   '${VOC}'   '${NH3
 #
 cat >gem_settings.nml <<EOF
  &grid
-  Grd_typ_S       = 'GV'       , 
+  Grd_typ_S       = 'GV'       ,
   Grd_ni          = 257        , Grd_nj          = 240        ,
   Grd_nila        = 150        , Grd_njla        = 150        ,
   Grd_dx          = 0.1        , Grd_dy          = 0.1        ,
@@ -95,7 +92,7 @@ cat >gem_settings.nml <<EOF
  &gement
   e_schm_stlag    = .true.     , e_schm_adcub    = .true.     ,
 
-  Topo_filmx_L    = .true.     , Topo_init_L     = .true.     , 
+  Topo_filmx_L    = .true.     , Topo_init_L     = .true.     ,
   Topo_dgfmx_L    = .true.     , Topo_dgfms_L    = .true.     ,
 
                                  E_geol_hscon_L  = .false.    ,
@@ -109,13 +106,13 @@ cat >gem_settings.nml <<EOF
   E_geol_hsea     = 3000       , E_geol_poin     = 3          ,
   E_geol_z0cst    = -1.        ,
 
-  E_tr3d_list_S   = 
-   'C2H6', 'C3H8', 'ALKA', 'TOLU', 'AROM', 'C2H2', 'CH4= 1.7e-6',  
-   'H2O2', 'FRMA', 'N2O5', 'PAN',  'DIAL', 'MOOH', 'PAA',  
-   'HONO', 'HNO4', 'SO2',  'ISOP', 'CRES', 'SO4',  'ALKE', 
-   'RNO3', 'MOH',  'ETHE', 'ROOH', 'MGLY', 'ACTA', 'HNO3', 
+  E_tr3d_list_S   =
+   'C2H6', 'C3H8', 'ALKA', 'TOLU', 'AROM', 'C2H2', 'CH4= 1.7e-6',
+   'H2O2', 'FRMA', 'N2O5', 'PAN',  'DIAL', 'MOOH', 'PAA',
+   'HONO', 'HNO4', 'SO2',  'ISOP', 'CRES', 'SO4',  'ALKE',
+   'RNO3', 'MOH',  'ETHE', 'ROOH', 'MGLY', 'ACTA', 'HNO3',
    'O3',   'MEK',  'NO',   'CO',   'ALD2', 'NO2',  'HCHO',
-   'BAP1', 'BAP2', 'NH3',  'NH4',  
+   'BAP1', 'BAP2', 'NH3',  'NH4',
    'PT25', 'PTCO', 'PH25', 'PHCO',
    'PMAS', 'PMCD', 'PMPB', 'PMNI',
    'SS01','SS02','SS03','SS04','SS05','SS06','SS07','SS08','SS09','SS10','SS11','SS12',
@@ -139,41 +136,41 @@ cat >gem_settings.nml <<EOF
   AEROSOL_model='CAM',
   so4_gas_part=0.50,
 
-  AERO_soil_file_S(1)='${EXP_LOCAL_DIR}/input/eko_cam/soil_1p5_gvp10.rpn',
-  AERO_soil_file_S(2)='${EXP_LOCAL_DIR}/input/eko_cam/clay_1p5_gvp10.rpn',
-  AERO_soil_file_S(3)='${EXP_LOCAL_DIR}/input/eko_cam/sand_1p5_gvp10.rpn',
-  AERO_config_file_S ='${EXP_LOCAL_DIR}/input/eko_cam/AEROSOL5T_ok',
-  AERO_emis_file_S   ='${EXP_LOCAL_DIR}/input/eko_cam/geia_emis_1.5x1.5_gcm_gvp10.rpn',
+  AERO_soil_file_S(1)='${EXP_LOCAL}/input/eko_cam/soil_1p5_gvp10.rpn',
+  AERO_soil_file_S(2)='${EXP_LOCAL}/input/eko_cam/clay_1p5_gvp10.rpn',
+  AERO_soil_file_S(3)='${EXP_LOCAL}/input/eko_cam/sand_1p5_gvp10.rpn',
+  AERO_config_file_S ='${EXP_LOCAL}/input/eko_cam/AEROSOL5T_ok',
+  AERO_emis_file_S   ='${EXP_LOCAL}/input/eko_cam/geia_emis_1.5x1.5_gcm_gvp10.rpn',
 
   GAS_chem_S = 'ADOM_CAM',
   GAS_land_S = 'BATS15',
   GAS_wetdepo_S = 'WETDEP_JS'
   GAS_drydepo_S= 'DRYDEP_AR'
-! 
+!
 !      months       1    2    3    4    5    6    7    8    9    10   11   12
 ! GAS_drydepo_o3 = 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
-! GAS_drydepo_o3 = 1.0, 1.0, 1.0, 1.0, 1.5, 2.0, 2.0, 2.0, 2.0, 1.5, 1.0, 1.2,    ! JS: February 5, 2021 
-  GAS_drydepo_o3 = 1.2, 1.2, 1.2, 1.2, 1.7, 2.2, 2.2, 2.2, 2.2, 1.7, 1.2, 1.4,    ! JS: February 13, 2021 
+! GAS_drydepo_o3 = 1.0, 1.0, 1.0, 1.0, 1.5, 2.0, 2.0, 2.0, 2.0, 1.5, 1.0, 1.2,    ! JS: February 5, 2021
+  GAS_drydepo_o3 = 1.2, 1.2, 1.2, 1.2, 1.7, 2.2, 2.2, 2.2, 2.2, 1.7, 1.2, 1.4,    ! JS: February 13, 2021
 !
   GAS_conv_S = 'ZMF'
   GAS_vdiff_S ='VD2'
   AERO_emis_S = 'GEIA_FULL'
 
-  GAS_land_file_S='${EXP_LOCAL_DIR}/input/geophys/landuse_gengeo_gvp10.fst'
+  GAS_land_file_S='${EXP_LOCAL}/input/geophys/landuse_gengeo_gvp10.fst'
 
   GAS_emis_type='EMEP_SNAP'
 
-  GAS_emis_file_S='${EXP_LOCAL_DIR}/input/emis/combined_nilu-eclipse_emissions-global05x05_gemaq-unit_anth+ship_gvp10.fst'
-! 
+  GAS_emis_file_S='${EXP_LOCAL}/input/emis/combined_nilu-eclipse_emissions-global05x05_gemaq-unit_anth+ship_gvp10.fst'
+!
 ! CBE - v3  Feb 22, 2021
-! 
-  GAS_emis_file_S_snap='${EXP_LOCAL_DIR}/input/emis/${SNAP_F1}',
-  GAS_emis_file_S_mask='${EXP_LOCAL_DIR}/input/emis/${SNAP_F1}',
-   PT_emis_file_S_snap='${EXP_LOCAL_DIR}/input/emis/${SNAP_F2}',
+!
+  GAS_emis_file_S_snap='${EXP_LOCAL}/input/emis/${SNAP_F1}',
+  GAS_emis_file_S_mask='${EXP_LOCAL}/input/emis/${SNAP_F1}',
+   PT_emis_file_S_snap='${EXP_LOCAL}/input/emis/${SNAP_F2}',
 
-  HDD15_grid_avr_file_S='${EXP_LOCAL_DIR}/input/hdd15_2020_daily_grid_average.dat'
-! 
-  GAS_top_lev_file_S='${EXP_LOCAL_DIR}/input/top/haloe_cmam_top_10mb_gvp10.rpn',
+  HDD15_grid_avr_file_S='${EXP_LOCAL}/input/hdd15_2020_daily_grid_average.dat'
+!
+  GAS_top_lev_file_S='${EXP_LOCAL}/input/top/haloe_cmam_top_10mb_gvp10.rpn',
 
 /
 
@@ -185,7 +182,7 @@ cat >gem_settings.nml <<EOF
         .796, .842, .884, .922, .955,
         .980, .993, 1.00,
 
-  Grd_rcoef = 1.0,      Pres_ptop       = 11.0 ,   
+  Grd_rcoef = 1.0,      Pres_ptop       = 11.0 ,
 
   Level_ip12000_L = .true.     ,
 
@@ -206,7 +203,7 @@ cat >gem_settings.nml <<EOF
   Cstv_pitop_8    = -1.0       , Cstv_pisrf_8    = 1000.0     ,
 
   Hspng_mf        = 0          ,
-  Hspng_nj        = 0          , 
+  Hspng_nj        = 0          ,
 
   Hzd_rwnd_L    = .true.       ,
 
@@ -234,7 +231,7 @@ cat >gem_settings.nml <<EOF
   Schm_hydro_L    = .false.     , Schm_nonhy_8    = 1.0        ,
   Schm_xwvt3      = 0          , Schm_hdlast_L   = .true.     ,
   Schm_itcn       = 2          , Schm_modcn      = 1          ,
-  Schm_itnlh      = 2          , Schm_itraj      = 3          , 
+  Schm_itnlh      = 2          , Schm_itraj      = 3          ,
   Schm_moist_L    = .true.     , Schm_adcub_L    = .true.     ,
   Schm_difqp_L    = .true.     , Schm_psadj_L    = .true.    ,
   Schm_sfix_L     = .false.    , Schm_wload_L    = .false.    ,
@@ -263,7 +260,7 @@ cat >gem_settings.nml <<EOF
  PHY_PCK_VERSION  = 'RPN-CMC_5.0.4' ,
 
  RADIA            = 'cccmarad'   , KNTRAD          = 6          ,
- RADFILES         = 'std'      , 
+ RADFILES         = 'std'      ,
  FOMIC            = .false.    , SIMISCCP        = .false.    ,
 
  NON_ORO = .false. ,
@@ -293,7 +290,7 @@ cat >gem_settings.nml <<EOF
  HC2              = 0.8        ,
  HF2              = 0.8        , HM2             = 0.8        ,
  SATUCO           = .true.     , INILWC          = .true.     ,
- KFCMOM           = .false.    , 
+ KFCMOM           = .false.    ,
  KFCTRIG4         = 0. , 0., 0.034, 0.034                     ,
  KFCTRIGA         = 50.        ,
  KFCRAD           = 1500.      , KFCDEPTH        = 4000.      ,
