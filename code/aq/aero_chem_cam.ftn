@@ -1,0 +1,204 @@
+#include <model_macros_f.h>
+CCC note dt is passed into here as 1/2 dt. -LN
+
+      subroutine aero_chem_cam(fmg,dt,trnch,kount,ni,nj,nk,
+     $                         aero_tr,fn_aerochem,
+     $                         aero_diags,fn_aerodiags,
+     $                         tt,hu,psfc,sig,hght,surfwd,
+     $                         fws,fmodv,flwc,sst,ftsoil,
+     $                         ice,snow,par,chem_land,fn_luc,frdz,ftv,deglat,deglon,
+     $                         sza,csza,grcld_ck,grcld_cs,qr,tnd,
+     $                         chem_date_curr,fkt,fhs,uu,vv,PBLTROW,PRETROW,
+     $                         tcld,rain_rt,cld_fn,qr3,
+     $                         rhet_n2o5,rhet_hmhp,gas_emis_SO4,
+     $                         emis_mr_so4,emis_mr_bc,emis_mr_oc,aero_emis_geia,aero_emis_soil)
+
+#include "phy_macros_f.h"
+#include "impnone.cdk"
+
+
+      integer chem_date_curr(14),status,i,l,fsiz
+      INTEGER K,IL1,IL2,MSG
+
+      real dt
+      integer fn_aerochem,fn_aerodiags,trnch,kount,ni,nj,nk,fn_luc 
+
+      real aero_tr      (ni,nk,fn_aerochem)
+      real aero_tr_save (ni,nk,fn_aerochem)    ! a dirty little trick to reverse ZMF convection
+      real aero_diags   (ni,nk,fn_aerodiags)
+
+      real tt(ni,nk)
+      real hu(ni,nk)
+      real sig(ni,nk)
+      real hght(ni,nk)
+      real fws(ni,nk)
+      real fmodv(ni,nk)
+      real flwc(ni,nk) 
+      real frdz(ni,nk)
+      real ftv(ni,nk)
+      real grcld_ck(ni,nk)
+      real grcld_cs(ni,nk)
+      real tnd(ni,nk)
+      real fkt(ni,nk)
+      real uu(ni,nk)
+      real vv(ni,nk)
+      real rhet_n2o5(ni,nk)
+      real rhet_hmhp(ni,nk)
+      REAL cld_fn(ni,nk)
+      REAL qr3(ni,nk)
+      real SHTJ(NI,NK)
+
+      real gas_emis_SO4(ni)
+      real aero_emis_geia(ni,nk)
+      real aero_emis_soil(ni,nk)
+
+      real emis_mr_so4(ni,nk)  ! j2
+      real emis_mr_bc (ni,nk)
+      real emis_mr_oc (ni,nk)
+
+      real qr(ni,2)
+
+      REAL PRETROW(ni,nk-1,2)
+
+      real psfc(ni)
+      real surfwd(ni)
+      real sst(ni)
+      real ftsoil(ni)
+      real ice(ni)
+      real snow(ni)
+      real par(ni)
+
+      real chem_land(ni,fn_luc)
+
+      real deglat(ni)
+      real deglon(ni)
+      real sza(ni)
+      real csza(ni)
+      real fhs(ni)
+      real fmg(ni)
+      REAL tcld(ni)
+      REAL rain_rt(ni)
+      REAL PBLTROW(ni)             
+!
+
+#include "chem_conv_point.cdk"
+#include "aero_chem_order_cam.cdk"
+
+!!--------------------
+c start chem_conv.cdk
+!
+!      local arrays
+
+      real TFROW(NI,NK)
+      real zfg(ni,nk)
+!
+      real SHJ(NI,NK-1)
+      real DSHJ(NI,NK-1)
+      real DZ(NI,NK-1)
+      real UTENDGW(NI,NK-1)
+      real VTENDGW(NI,NK-1)
+!
+       real mu(ni,nk-1)
+       real eu(ni,nk-1)
+       real du(ni,nk-1)
+       real md(ni,nk-1)
+       real mc(ni,nk-1)
+       real ed(ni,nk-1)
+       real dp_gem(ni,nk-1)
+!
+       real mb(ni)
+       real eps0(ni)
+       real dsubcld(ni)
+!
+       integer ideep(ni)
+       integer jt(ni)
+       integer maxg(ni)
+       integer jd(ni)
+       integer lengath
+
+!-------------------
+
+!       write(*,*) 'aero_chem_cam.ftn -1 -enter '
+!       call flush(6)
+
+!!       call chem_setreal(SHJ,0.,NI*(NK-1))  ! not required
+!!       call chem_setreal(SHTJ,0.,NI*NK)     ! not required
+!!       call chem_setreal(DSHJ,0.,NI*(NK-1)) ! not required
+!
+       call chem_setreal(UTENDGW,0.,NI*(NK-1))
+       call chem_setreal(VTENDGW,0.,NI*(NK-1))
+       call chem_setreal(DZ,0.,NI*(NK-1))
+       call chem_setreal(TFROW,0.,NI*NK)
+
+C     ---------------------------------------------------------
+!      write(*,*) 'aero_chem_cam.ftn -2'
+!      call flush(6)
+
+      DO I=1, NI
+        DO  K=1,NK
+          SHTJ(I,K)=sig(i,k)
+        END DO
+        SHTJ(I,1)=AMAX1(SHTJ(I,1),0.0003)
+        DO K=1,NK-1
+          SHJ(I,K)=(SHTJ(I,K)+SHTJ(I,K+1))/2.
+          DSHJ(I,K)=SHTJ(I,K+1)-SHTJ(I,K)
+        END DO
+      END DO
+C     ---------------------------------------------------------
+!      write(*,*) 'aero_chem_cam.ftn -3'
+!      call flush(6)
+
+      CALL CONV_POINT (nk-1,nk,ni,fn_aerochem)
+
+!      write(*,*) 'aero_chem_cam.ftn -3a'
+!      call flush(6)
+
+      MSG=0
+      IL1=1
+      IL2=ni
+C
+!      write(*,*) 'aero_chem_cam.ftn -4'
+!      call flush(6)
+
+C KS:  Now done by KFCP5 so not needed
+C
+! JWK: 12 X 2011 have to keep this junk as some fields are calcualted 
+!                and passed tp aeroexe1
+!		 too much work to change and test .. 
+!		 just reverse any action done on aero_tr
+!
+	aero_tr_save=aero_tr  ! a dirty little trick to reverse ZMF convection
+!
+      call aero_chem_conv (psfc,tt,hu,
+     $                       dt,ni,nk,trnch,kount,
+     &                       fn_aerochem,aerochem_np,aero_tr,UU,VV,PBLTROW,
+     &                       UTENDGW,VTENDGW,IL1,IL2,MSG,
+     &                       SHJ,SHTJ,DSHJ,cncaSO2,cncaSO4,cncaH2O2,
+     &                       DZ,PRETROW,TFROW,
+     &                       mu,eu,du,md,mc,ed,dp_gem,mb,eps0,zfg,dsubcld,
+     &                       ideep,jt,maxg,jd,lengath)
+!
+	aero_tr=aero_tr_save  !  a dirty little trick to reverse ZMF convection
+!
+
+!      write(*,*) 'aero_chem_cam.ftn -5'
+!      call flush(6)
+
+c
+      call aeroexe1(fmg,dt,trnch,kount,ni,nj,nk,
+     $                         aero_tr,fn_aerochem,
+     $                         aero_diags,fn_aerodiags,
+     $                         tt,hu,psfc,sig,hght,surfwd,
+     $                         fws,fmodv,flwc,ftsoil,
+     $                         ice,snow,par,chem_land,fn_luc,frdz,ftv,deglat,deglon,
+     $                         sza,csza,grcld_ck,grcld_cs,qr,tnd,
+     $                         mu,eu,du,md,mc,ed,
+     $                         dp_gem,mb,eps0,zfg,dsubcld,ideep,jt,maxg,jd,lengath,
+     $                         chem_date_curr,fkt,fhs,uu,vv,SHJ,SHTJ,DSHJ,IL1,IL2,
+     &                         MSG,DZ,PRETROW,TFROW,tcld,rain_rt,cld_fn,
+     &                         rhet_n2o5,rhet_hmhp,
+     &                         gas_emis_SO4,aero_emis_geia,aero_emis_soil,
+     &                         emis_mr_so4,emis_mr_bc,emis_mr_oc)
+!
+      return
+      end

@@ -1,0 +1,74 @@
+!--------------------------------------------------------------------------------------------------------------
+      subroutine aero_emis_emep_snap_apply_bc_oc(local_hour,imonth,emep_mask,emis_mr_bc,emis_mr_oc,
+     &                                         snap1,snap2,snap3,snap4,snap5,snap6,snap7,snap8,snap9,snap10,snap11,
+     &                                         frdz,tnd,frdt,ni,nk)
+!--------------------------------------------------------------------------------------------------------------
+!
+!     J2 - 2020-07-26 SO4 emissions distributed in vertical -> 50% split gas/aero (via namelist)
+!
+!--------------------------------------------------------------------------------------------------------------
+#include "impnone.cdk"
+
+      integer ni,nj,nk,level,klevel
+      integer imonth,local_hour(ni)
+*
+      real emis_mr_bc(ni,Nk),emis_mr_oc(ni,Nk)
+
+      real emep_mask(ni,nk)   !  EMEP mask from interpolation via PGSM is on level k=1
+                              !  mask derived from emissions coded by JS on level k=2
+c
+      real snap1(ni,nk),snap2(ni,nk),snap3(ni,nk),snap4(ni,nk),snap5(ni,nk)
+      real snap6(ni,nk),snap7(ni,nk),snap8(ni,nk),snap9(ni,nk),snap10(ni,nk),snap11(ni,nk)
+c
+#include "aq_emis_emep_snap_apply.cdk"
+c
+      real frdz(ni,nk)        ! frdz is calculated asa thickness between mid-levels 
+      real tnd(ni,nk)         ! tnd is applied at a level thus in the middle of frdz 
+                              ! jwk - April 2009
+      real frdt,rtnd
+c
+#include "aq_emis_sfc.cdk"
+#include "aq_chem_order_adom.cdk"
+#include "cc_nml_vars.cdk"
+c
+       integer i,ipoint,isp_e,k,ihh,imm,ihour,k_mask
+       integer kpos_BC00,kpos_OM00
+c
+       real emep_snap_aero
+c
+       emep_snap_aero(ipoint,isp_e,k,ihh,imm)=
+     &                snap1(ipoint,isp_e)  * snap1_tf24(ihh)*24.0  * snap1_tfmonth(imm)*12.0  * snap1_z(k)  + 
+     &                snap2(ipoint,isp_e)  * snap2_tf24(ihh)*24.0  * snap2_tfmonth(imm)*12.0  * snap2_z(k)  +
+     &                snap3(ipoint,isp_e)  * snap3_tf24(ihh)*24.0  * snap3_tfmonth(imm)*12.0  * snap3_z(k)  +
+     &                snap4(ipoint,isp_e)  * snap4_tf24(ihh)*24.0  * snap4_tfmonth(imm)*12.0  * snap4_z(k)  +
+     &                snap5(ipoint,isp_e)  * snap5_tf24(ihh)*24.0  * snap5_tfmonth(imm)*12.0  * snap5_z(k)  +
+     &                snap6(ipoint,isp_e)  * snap6_tf24(ihh)*24.0  * snap6_tfmonth(imm)*12.0  * snap6_z(k)  +
+     &                snap7(ipoint,isp_e)  * snap7_tf24(ihh)*24.0  * snap7_tfmonth(imm)*12.0  * snap7_z(k)  +
+     &                snap8(ipoint,isp_e)  * snap8_tf24(ihh)*24.0  * snap8_tfmonth(imm)*12.0  * snap8_z(k)  +
+     &                snap9(ipoint,isp_e)  * snap9_tf24(ihh)*24.0  * snap9_tfmonth(imm)*12.0  * snap9_z(k)  +
+     &                snap10(ipoint,isp_e) * snap10_tf24(ihh)*24.0 * snap10_tfmonth(imm)*12.0 * snap10_z(k)  
+c-------------------------------------------------------------------------------------------------------------
+!
+       k_mask=1    !  27 XI 2018 - jwk TNO mask 0/1 
+!
+       kpos_BC00=gn_gasemis+1
+       kpos_OM00=gn_gasemis+2
+!
+       emis_mr_bc=0.0
+       emis_mr_oc=0.0
+!
+       do i=1,ni
+          if(emep_mask(i,k_mask).gt.0.99) then    ! inside extended EMEP grid  ! 25.11.2018 -- jwk
+             ihour=local_hour(i)
+!
+             do level=1,4
+                klevel=nk-level+1
+                emis_mr_bc(i,klevel) = emep_snap_aero(i,kpos_BC00 ,level,ihour,imonth)*Emis_Scale_PM
+                emis_mr_oc(i,klevel) = emep_snap_aero(i,kpos_OM00 ,level,ihour,imonth)*Emis_Scale_PM
+             end do
+!
+         end if
+      end do
+c
+      return
+      end

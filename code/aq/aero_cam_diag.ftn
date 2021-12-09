@@ -1,0 +1,155 @@
+      subroutine aero_cam_diag (aero_tr_slb,F_chmbusper,F_chm_bper_siz,ni,nk)
+c
+#include "impnone.cdk"
+#include "aero_chem_order_cam.cdk"
+#include "chm_macros_f.h"
+#include "chm_bus.cdk"
+c
+      integer F_chm_bper_siz
+      integer ni,nk
+      integer ipos,kpos
+      integer ia1,ia2,ia3,ia4,ia5,ia6,ia7,ia8,ia9,ia10,ia11,ia12
+      integer ib1,ib2,ib3,ib4,ib5
+c
+      real aero_tr_slb(ni,nk,gn_aerochem)
+      real F_chmbusper(F_chm_bper_siz)
+c
+      integer i,k,ik
+c 
+      real SS_PM25,SS_PM10
+      real SF_PM25,SF_PM10
+      real BC_PM25,BC_PM10
+      real OC_PM25,OC_PM10
+      real SD_PM25,SD_PM10
+
+      real AERO_SUM25, AERO_SUM10, AERO_SUM_HUGE, AERO_SUM_BIN
+
+      AERO_SUM25(ipos,kpos,ia1,ia2,ia3,ia4,ia5,ia6,ia7,ia8,ia9)=
+     &           aero_tr_slb(ipos,kpos, ia1  ) + 
+     &           aero_tr_slb(ipos,kpos, ia2  ) + 
+     &           aero_tr_slb(ipos,kpos, ia3  ) + 
+     &           aero_tr_slb(ipos,kpos, ia4  ) + 
+     &           aero_tr_slb(ipos,kpos, ia5  ) + 
+     &           aero_tr_slb(ipos,kpos, ia6  ) + 
+     &           aero_tr_slb(ipos,kpos, ia7  ) + 
+     &           aero_tr_slb(ipos,kpos, ia8  ) + 
+     &           aero_tr_slb(ipos,kpos, ia9  )  
+c
+      AERO_SUM10(ipos,kpos,ia10,ia11,ia12)=
+     &           aero_tr_slb(ipos,kpos, ia10  ) + 
+     &           aero_tr_slb(ipos,kpos, ia11  ) + 
+     &           aero_tr_slb(ipos,kpos, ia12 ) 
+!
+!      AERO_SUM_HUGE(ipos,kpos,ia11,ia12)=
+!     &              aero_tr_slb(ipos,kpos, ia11 ) +
+!     &              aero_tr_slb(ipos,kpos, ia12 ) 
+!
+!
+      AERO_SUM_BIN(ipos,kpos,ib1,ib2,ib3,ib4,ib5)=
+     &             aero_tr_slb(ipos,kpos, ib1  ) + 
+     &             aero_tr_slb(ipos,kpos, ib2  ) + 
+     &             aero_tr_slb(ipos,kpos, ib3  ) + 
+     &             aero_tr_slb(ipos,kpos, ib4  ) + 
+     &             aero_tr_slb(ipos,kpos, ib5  )
+
+c--------------------------------------------------------------------------------
+c
+      do k=1,nk
+         do i=1,ni
+!
+            ik = (k-1)*ni + i - 1
+!
+            F_chmbusper( bn01 +ik) = AERO_SUM_BIN(i,k,cncaSS1 ,cncaSF1, cncaBC1, cncaOC1, cncaSD1)
+            F_chmbusper( bn02 +ik) = AERO_SUM_BIN(i,k,cncaSS2 ,cncaSF2, cncaBC2, cncaOC2, cncaSD2)
+            F_chmbusper( bn03 +ik) = AERO_SUM_BIN(i,k,cncaSS3 ,cncaSF3, cncaBC3, cncaOC3, cncaSD3)
+            F_chmbusper( bn04 +ik) = AERO_SUM_BIN(i,k,cncaSS4 ,cncaSF4, cncaBC4, cncaOC4, cncaSD4)
+            F_chmbusper( bn05 +ik) = AERO_SUM_BIN(i,k,cncaSS5 ,cncaSF5, cncaBC5, cncaOC5, cncaSD5)
+            F_chmbusper( bn06 +ik) = AERO_SUM_BIN(i,k,cncaSS6 ,cncaSF6, cncaBC6, cncaOC6, cncaSD6)
+            F_chmbusper( bn07 +ik) = AERO_SUM_BIN(i,k,cncaSS7 ,cncaSF7, cncaBC7, cncaOC7, cncaSD7)
+            F_chmbusper( bn08 +ik) = AERO_SUM_BIN(i,k,cncaSS8 ,cncaSF8, cncaBC8, cncaOC8, cncaSD8)
+            F_chmbusper( bn09 +ik) = AERO_SUM_BIN(i,k,cncaSS9 ,cncaSF9, cncaBC9, cncaOC9, cncaSD9)
+            F_chmbusper( bn10 +ik) = AERO_SUM_BIN(i,k,cncaSS10,cncaSF10,cncaBC10,cncaOC10,cncaSD10)
+            F_chmbusper( bn11 +ik) = AERO_SUM_BIN(i,k,cncaSS11,cncaSF11,cncaBC11,cncaOC11,cncaSD11)
+            F_chmbusper( bn12 +ik) = AERO_SUM_BIN(i,k,cncaSS12,cncaSF12,cncaBC12,cncaOC12,cncaSD12)
+!
+            SS_PM25= AERO_SUM25(i,k,cncaSS1,cncaSS2,cncaSS3,cncaSS4,cncaSS5,cncaSS6,cncaSS7,cncaSS8,cncaSS9)
+            SF_PM25= AERO_SUM25(i,k,cncaSF1,cncaSF2,cncaSF3,cncaSF4,cncaSF5,cncaSF6,cncaSF7,cncaSF8,cncaSF9)
+            BC_PM25= AERO_SUM25(i,k,cncaBC1,cncaBC2,cncaBC3,cncaBC4,cncaBC5,cncaBC6,cncaBC7,cncaBC8,cncaBC9)
+            OC_PM25= AERO_SUM25(i,k,cncaOC1,cncaOC2,cncaOC3,cncaOC4,cncaOC5,cncaOC6,cncaOC7,cncaOC8,cncaOC9)
+            SD_PM25= AERO_SUM25(i,k,cncaSD1,cncaSD2,cncaSD3,cncaSD4,cncaSD5,cncaSD6,cncaSD7,cncaSD8,cncaSD9)
+!
+            SS_PM10 = SS_PM25 + AERO_SUM10(i,k,cncaSS10,cncaSS11,cncaSS12)
+            SF_PM10 = SF_PM25 + AERO_SUM10(i,k,cncaSF10,cncaSF11,cncaSF12) 
+            BC_PM10 = BC_PM25 + AERO_SUM10(i,k,cncaBC10,cncaBC11,cncaBC12)
+            OC_PM10 = OC_PM25 + AERO_SUM10(i,k,cncaOC10,cncaOC11,cncaOC12)
+            SD_PM10 = SD_PM25 + AERO_SUM10(i,k,cncaSD10,cncaSD11,cncaSD12)
+!
+            F_chmbusper( atss +ik) = SS_PM10 ! + AERO_SUM_HUGE(i,k,cncaSS11,cncaSS12)
+            F_chmbusper( atsf +ik) = SF_PM10 ! + AERO_SUM_HUGE(i,k,cncaSF11,cncaSF12)
+            F_chmbusper( atbc +ik) = BC_PM10 ! + AERO_SUM_HUGE(i,k,cncaBC11,cncaBC12)
+            F_chmbusper( atoc +ik) = OC_PM10 ! + AERO_SUM_HUGE(i,k,cncaOC11,cncaOC12)
+            F_chmbusper( atsd +ik) = SD_PM10 ! + AERO_SUM_HUGE(i,k,cncaSD11,cncaSD12)
+!
+            F_chmbusper( ftss +ik) = SS_PM25
+            F_chmbusper( ftsf +ik) = SF_PM25
+            F_chmbusper( ftbc +ik) = BC_PM25
+            F_chmbusper( ftoc +ik) = OC_PM25
+            F_chmbusper( ftsd +ik) = SD_PM25
+!
+            F_chmbusper( pm25 +ik) = SS_PM25 + SF_PM25 + BC_PM25 + OC_PM25 + SD_PM25 
+            F_chmbusper( pm10 +ik) = SS_PM10 + SF_PM10 + BC_PM10 + OC_PM10 + SD_PM10 
+!
+!           compute all PM :== PM10+PM_HUGE(bin #11 & #12)
+!
+            F_chmbusper( pm99 +ik) = F_chmbusper( atss +ik) +
+     &                               F_chmbusper( atsf +ik) +
+     &                               F_chmbusper( atbc +ik) +
+     &                               F_chmbusper( atoc +ik) +
+     &                               F_chmbusper( atsd +ik) 
+!
+         end do
+      end do
+c--------------------------------------------------------------------------------
+      return
+      end
+!
+!   From: Joanna Struzewska <struzw@is.pw.edu.pl>
+!   To: jacek@yorku.ca
+!   Subject: PM2.5 & PM10
+!   Date: Wed, 09 Mar 2011 00:28:46 +0100
+!   
+!   12 size bins - diameter:
+
+!   PM2.5 - (01-08 bin) 
+!   0.015
+!   0.030
+!   0.060
+!   0.120
+!   0.239
+!   0.479
+!   0.959
+!   1.919
+
+!   PM-coarse (09-12 bin)
+!   3.839
+!   7.679
+!   15.35
+!   30.71
+!---end 
+
+
+!Begin forwarded message:
+
+!From: Strużewska Joanna <joanna.struzewska@pw.edu.pl>
+!Subject: pm2p5 / pm10
+!Date: May 18, 2019 at 3:18:11 PM EDT
+!To: "Jacek W. Kaminski" <jkaminski@ecoforecast.net>
+!
+!Od dzis inne sumowanie 
+!
+!pm2.5 == suma 1:9
+!mp10 == suma ALL 12 bins!
+!
+!18.05.2019 
+!js
+

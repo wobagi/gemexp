@@ -1,0 +1,583 @@
+      SUBROUTINE CLDPRP6X(Q,T,P,Z,S,MU,EU,DU,MD,ED,SD,QD,MC,QU,SU,ZF,
+     1                    QST,HMN,HSAT,ALPHA,SHAT,QL,                          
+     2                    X,XU,XD,ITRPHS,NTRAC,ITRAC,                         
+     3                    JB,LEL,JT,MX,J0,JD,                                 
+     4                    ILEV,ILG,IL1G,IL2G,RD,GRAV,CP,MSG,                  
+     5                    GAMMA,DZ,IPRM,HU,HD,                                
+     6                    EPS,F,I1,I2,IHAT,                                   
+     7                    I3,IDAG,I4,QSTHAT,HSTHAT,                           
+     8                    GAMHAT,CU,QDS,                                       
+     9                    HMIN,EXPDIF,EXPNUM,FTEMP,EPS0,                      
+     A                    RMUE,ZUEF,ZDEF,FACT,TU,                             
+     B                    RL,EST,TOTPCP,TOTEVP,ALFA,                          
+     C                    HMAX,ZFD,ZFB,DENOM,HUB,                             
+     D                    IRESET,JLCL                                )        
+C                                                             
+C     * FEB 18/2004 - M.LAZARE.  NEW VERSION FOR GCM13D:
+C     *                          - "ITRPHS" PASSED IN AND USED TO CONTROL
+C     *                            SELECTIVE PHYSICS CALCULATIONS FOR TRACERS.
+C     *                          - REVISED FORMULATION TO AVOID NEGATIVE
+C     *                            VALUES OF XROW.
+C     * NOV 10/99 - M.LAZARE/    NEW VERSION (CLDPRP6) FOR GCM13. SPECIAL CARE
+C     *             N.MCFARLANE. TAKEN IN DEFINING QST,QSTHAT AND GAMHAT       
+C     *                          IN SITUATIONS WHERE EST.GE.P.                 
+C     * JUN 10/98 - M.LAZARE/ PREVIOUS VERSION CLDPRP5 FOR GCM12:              
+C     *             M.HOLZER/                                                  
+C     *             R.HARVEY/                                                  
+C     *             N.MCFARLANE.                                               
+C     * JUN 26/96 - M.LAZARE. PREVIOUS VERSION CLDPRP4 FOR GCM11.              
+                                                                               
+      IMPLICIT REAL (A-H,O-Z),                                                 
+     +INTEGER (I-N)                                                            
+                                                                               
+      REAL      Q(ILG,ILEV),      T(ILG,ILEV),      P(ILG,ILEV),               
+     1          Z(ILG,ILEV),      S(ILG,ILEV),     MU(ILG,ILEV),               
+     2         EU(ILG,ILEV),     DU(ILG,ILEV),     MD(ILG,ILEV),               
+     3         ED(ILG,ILEV),     SD(ILG,ILEV),     QD(ILG,ILEV),               
+     4         MC(ILG,ILEV),     QU(ILG,ILEV),     SU(ILG,ILEV),               
+     5         ZF(ILG,ILEV),    QST(ILG,ILEV),    HMN(ILG,ILEV),               
+     6       HSAT(ILG,ILEV),  ALPHA(ILG,ILEV),   SHAT(ILG,ILEV),               
+     7         QL(ILG,ILEV)                                                    
+                                                                               
+      REAL   X(ILG,ILEV,NTRAC), XU(ILG,ILEV,NTRAC), XD(ILG,ILEV,NTRAC)         
+      INTEGER ITRPHS(NTRAC)                                                    
+      
+c       real summc(ilg)
+C                                                                              
+      INTEGER  JB(ILG),   LEL(ILG),   JT(ILG),   MX(ILG),                      
+     1         J0(ILG),    JD(ILG)                                             
+                                                                               
+C     * WORK FIELDS:                                                           
+                                                                               
+      REAL  GAMMA(ILG,ILEV),     DZ(ILG,ILEV),   IPRM(ILG,ILEV),               
+     1         HU(ILG,ILEV),     HD(ILG,ILEV),    EPS(ILG,ILEV),               
+     2          F(ILG,ILEV),     I1(ILG,ILEV),     I2(ILG,ILEV),               
+     3       IHAT(ILG,ILEV),     I3(ILG,ILEV),   IDAG(ILG,ILEV),               
+     4         I4(ILG,ILEV), QSTHAT(ILG,ILEV), HSTHAT(ILG,ILEV),               
+     5     GAMHAT(ILG,ILEV),     CU(ILG,ILEV),    QDS(ILG,ILEV)                
+                                                                               
+      REAL   HMIN(ILG), EXPDIF(ILG), EXPNUM(ILG), FTEMP(ILG),                  
+     1       EPS0(ILG),   RMUE(ILG),   ZUEF(ILG),  ZDEF(ILG),                  
+     2       FACT(ILG),     TU(ILG),     RL(ILG),   EST(ILG),                  
+     3     TOTPCP(ILG), TOTEVP(ILG),   ALFA(ILG),  HMAX(ILG),                  
+     4        ZFD(ILG),    ZFB(ILG),  DENOM(ILG),   HUB(ILG),                  
+     5     IRESET(ILG),   JLCL(ILG)                                            
+                                                                               
+      COMMON/EPS   / A,B,EPS1,EPS2                                             
+      COMMON/HTCP  / TFREEZ,T2S,AI,BI,AW,BW,SLP                                
+                                                                               
+      DATA RRL /2.501E6/                                                       
+C----------------------------------------------------------------------        
+!      DO 10 K=MSG+2,ILEV-1
+      DO 10 K=MSG+1,ILEV-1                                    !cam_conv
+      DO 10 IL=IL1G,IL2G                                                       
+        DZ(IL,K)=ZF(IL,K)-ZF(IL,K+1)                                           
+   10 CONTINUE                                                                 
+C                                                                              
+      DO 50 K=MSG+1,ILEV                                                       
+      DO 50 IL=IL1G,IL2G                                                       
+        MU(IL,K)=0.                                                            
+        F(IL,K)=0.                                                             
+        EPS(IL,K)=0.                                                           
+        EU(IL,K)=0.                                                            
+        DU(IL,K)=0.                                                            
+        QL(IL,K)=0.                                                            
+        CU(IL,K)=0.                                                            
+        QDS(IL,K)=Q(IL,K)                                                      
+        MD(IL,K)=0.                                                            
+        ED(IL,K)=0.                                                            
+        SD(IL,K)=S(IL,K)                                                       
+        QD(IL,K)=Q(IL,K)                                                       
+        MC(IL,K)=0.                                                            
+        QU(IL,K)=Q(IL,K)                                                       
+        SU(IL,K)=S(IL,K)                                                       
+        if (T(il,k).eq.0.)write(*,*)'T zero 1',il,k,t(il,k)
+        EST(IL)=EXP(A-B/T(IL,K))                                               
+        IF(K.GE.LEL(IL))                  THEN                                 
+          if ((p(il,k)-est(il)).eq.0.)write(*,*)'p-est zero 2',il,k,p(il,k),est(il)
+          QST(IL,K)=EPS1*EST(IL)/(P(IL,K)-EST(IL))                             
+        ELSE                                                                   
+          QST(IL,K) = Q(IL,K)                                                  
+        ENDIF                                                                  
+        if (eps1.eq.0.)write(*,*)'eps1 zero 3',eps1
+        if ((rd*t(il,k)**2).eq.0.)write(*,*)'rd*t zero 4',il,k,rd,t(il,k)
+        if (cp.eq.0.)write(*,*)'cp zero 5',cp
+        GAMMA(IL,K)=QST(IL,K)*(1.+QST(IL,K)/EPS1)*EPS1*RRL                     
+     1              /(RD*T(IL,K)**2)*RRL/CP                                    
+        HMN (IL,K)=CP*T(IL,K)+GRAV*Z(IL,K)+RRL*Q  (IL,K)                       
+        HSAT(IL,K)=CP*T(IL,K)+GRAV*Z(IL,K)+RRL*QST(IL,K)                       
+        HU(IL,K)=HMN(IL,K)                                                     
+   50 CONTINUE                                                                 
+C                                                                              
+      IF(ITRAC.NE.0) THEN                                                      
+        DO N=1,NTRAC                                                           
+          IF(ITRPHS(N).GT.0)                                   THEN            
+            DO 60 K=MSG+1,ILEV                                                 
+            DO 60 IL=IL1G,IL2G                                                 
+              XU(IL,K,N)=X(IL,K,N)                                             
+              XD(IL,K,N)=X(IL,K,N)                                             
+   60       CONTINUE                                                           
+          ENDIF                                                                
+        ENDDO                                                                  
+      ENDIF                                                                    
+C                                                                              
+      DO 75 IL=IL1G,IL2G                                                       
+        HSTHAT(IL,MSG+1)=HSAT(IL,MSG+1)                                        
+        QSTHAT(IL,MSG+1)=QST(IL,MSG+1)                                         
+        GAMHAT(IL,MSG+1)=GAMMA(IL,MSG+1)                                       
+        TOTPCP(IL)  =0.                                                        
+        TOTEVP(IL)  =0.                                                        
+        DZ(IL,ILEV) =ZF(IL,ILEV)                                               
+        RL(IL)=RRL                                                             
+        JT(IL)=LEL(IL)                                                         
+        JLCL(IL)=0.                                                            
+        HMIN(IL)=1.E6                                                          
+        HMAX(IL)=HMN(IL,MX(IL))                                                
+        ZFB(IL)=ZF(IL,JB(IL))                                                  
+        IRESET(IL)=0.                                                          
+   75 CONTINUE                                                                 
+C                                                                              
+      DO 100 K=MSG+2,ILEV                                                      
+      DO 100 IL=IL1G,IL2G                                                      
+       QSTHAT(IL,K)=QST(IL,K)                                                  
+       GAMHAT(IL,K)=GAMMA(IL,K)                                                
+       IF(K.GE.LEL(IL))                                             THEN       
+c changed may 18/05 LN
+cc        IF(QST(IL,K-1).NE.QST(IL,K))                          THEN           
+        IF((QST(IL,K-1)-QST(IL,K)).gt.1.e-4)                    THEN           
+          if (qst(il,k).eq.0.)write(*,*)'qst zero 6',il,k,qst(il,k)
+          QSTHAT(IL,K)=LOG(QST(IL,K-1)/QST(IL,K))*QST(IL,K-1)*QST(IL,K)        
+     1                 /(QST(IL,K-1)-QST(IL,K))                                
+        ENDIF                                                                  
+C                                                                              
+c changed may 18/05 LN
+cc        IF(GAMMA(IL,K-1).NE.GAMMA(IL,K))                      THEN           
+        IF((GAMMA(IL,K-1)-GAMMA(IL,K)).gt.1.e-4)                THEN           
+          if (gamma(il,k).eq.0.)write(*,*)'gamma zero 7',il,k,gamma(il,k)
+          GAMHAT(IL,K)=LOG(GAMMA(IL,K-1)/GAMMA(IL,K))                          
+     1            *GAMMA(IL,K-1)*GAMMA(IL,K)/(GAMMA(IL,K-1)-GAMMA(IL,K))       
+        ENDIF                                                                  
+       ENDIF                                                                   
+       HSTHAT(IL,K)=CP*SHAT(IL,K)+RRL*QSTHAT(IL,K)                             
+  100 CONTINUE                                                                 
+C                                                                              
+CCC   **********************************************************               
+CCC   FIND THE LEVEL OF MINIMUM HSAT, WHERE DETRAINMENT STARTS.                
+CCC   INITIALIZE CERTAIN ARRAYS INSIDE THE CLOUD PLUME.                        
+CCC   **********************************************************               
+C                                                                              
+      DO 150 J=MSG+1,ILEV                                                      
+      DO 150 IL=IL1G,IL2G                                                      
+        IF(HSAT(IL,J).LE.HMIN(IL).AND.(J.GE.JT(IL).AND.J.LE.JB(IL)))THEN       
+           HMIN(IL)=HSAT(IL,J)                                                 
+           J0(IL)  =J                                                          
+        ENDIF                                                                  
+        IF(J.GE.JT(IL) .AND. J.LE.JB(IL))                           THEN       
+           F(IL,J)= 0.                                                         
+          HU(IL,J)= HMAX(IL)                                                   
+        ENDIF                                                                  
+  150 CONTINUE                                                                 
+C                                                                              
+C     * DEFINE BOUNDS FOR DETRAINMENT LEVEL.                                   
+C     * INITIALIZE BASE VALUES FOR TAYLOR SERIES APPROXIMATION.                
+C     * RE-INITIALIZE "HMIN" FOR ENSUING CALCULATIONS.                         
+C                                                                              
+      DO 175 IL=IL1G,IL2G                                                      
+        J0(IL)=MIN(J0(IL),JB(IL)-2)                                            
+        J0(IL)=MAX(J0(IL),JT(IL)+2)                                            
+        I1(IL,JB(IL))=0.                                                       
+        I2(IL,JB(IL))=0.                                                       
+        I3(IL,JB(IL))=0.                                                       
+        I4(IL,JB(IL))=0.                                                       
+        HMIN(IL)=1.E6                                                          
+  175 CONTINUE                                                                 
+C                                                                              
+CCCC  *********************************************************                
+CCCC  COMPUTE TAYLOR SERIES FOR APPROXIMATE EPS(Z) BELOW                       
+CCCC  *********************************************************                
+C                                                                              
+      DO 275 J=ILEV-1,MSG+1,-1                                                 
+      DO 275 IL=IL1G,IL2G                                                      
+        IF(J.LT.JB(IL) .AND. J.GE.JT(IL))                           THEN       
+          I1  (IL,J) = I1(IL,J+1)+(HMAX(IL)-HMN(IL,J))*DZ(IL,J)                
+          IHAT(IL,J) = 0.5*(I1(IL,J+1)+I1(IL,J))                               
+          I2  (IL,J) = I2(IL,J+1)+IHAT(IL,J)*DZ(IL,J)                          
+          IDAG(IL,J) = 0.5*(I2(IL,J+1)+I2(IL,J))                               
+          I3  (IL,J) = I3(IL,J+1)+IDAG(IL,J)*DZ(IL,J)                          
+          IPRM(IL,J) = 0.5*(I3(IL,J+1)+I3(IL,J))                               
+          I4  (IL,J) = I4(IL,J+1)+IPRM(IL,J)*DZ(IL,J)                          
+        ENDIF                                                                  
+  275 CONTINUE                                                                 
+C                                                                              
+      DO 350 J=MSG+1,ILEV                                                      
+      DO 350 IL=IL1G,IL2G                                                      
+        IF( (J.GE.J0(IL) .AND. J.LE.JB(IL)) .AND.                              
+     1      HMN(IL,J).LE.HMIN(IL)                )                  THEN       
+          HMIN(IL)=HMN(IL,J)                                                   
+          EXPDIF(IL)=HMAX(IL)-HMIN(IL)                                         
+        ENDIF                                                                  
+  350 CONTINUE                                                                 
+C                                                                              
+CCCC  *********************************************************                
+CCCC  COMPUTE APPROXIMATE EPS(Z) USING ABOVE TAYLOR SERIES                     
+CCCC  *********************************************************                
+C                                                                              
+      DO 375 J=MSG+2,ILEV                                                      
+      DO 375 IL=IL1G,IL2G                                                      
+        IF(J.LT.JT(IL) .OR. J.GT.JB(IL))                            THEN       
+          I1(IL,J)=0.                                                          
+          EXPNUM(IL)=0.                                                        
+        ELSE                                                                   
+          if ((z(il,j-1)-z(il,j)).eq.0.)write(*,*)'z diff zero 8',il,j,j-1
+          EXPNUM(IL)=HMAX(IL)- ( HSAT(IL,J-1)*(ZF(IL,J)-Z(IL,J))               
+     1          +HSAT(IL,J)*(Z(IL,J-1)-ZF(IL,J)) )/(Z(IL,J-1)-Z(IL,J))         
+        ENDIF                                                                  
+        IF( (EXPDIF(IL).GT.100. .AND. EXPNUM(IL).GT.0.) .AND.                  
+     1   I1(IL,J).GT.EXPNUM(IL)*DZ(IL,J))                        THEN          
+          if (i1(il,j).eq.0.)write(*,*)'i1 zero 9',il,j,i1(il,j)
+          FTEMP(IL)=EXPNUM(IL)/I1(IL,J)                                        
+
+          FP1=I2(IL,J)/I1(IL,J)*FTEMP(IL)**2
+          FP2=log(2.*I2(IL,J)**2-I1(IL,J)*I3(IL,J))-2.*log(I1(IL,J))+3.*log(FTEMP(IL))
+          FP30=4.*log(FTEMP(IL))-3.*log(I1(IL,J))
+          FP3=log(I1(IL,J))+log(I2(IL,J))+log(I3(IL,J))+FP30
+          FP4=3.*log(I2(IL,J))+FP30
+          FP5=2.*log(I1(IL,J))+log(I4(IL,J))+FP30
+
+          F(IL,J) = FTEMP(IL) + FP1+exp(FP2) - 5.*exp(FP3) + 5.*exp(FP4) + exp(FP5)
+
+!          F(IL,J)=FTEMP(IL)                                                    
+!     1            +I2(IL,J)/I1(IL,J)*FTEMP(IL)**2                              
+!     2            +(2.*I2(IL,J)**2-I1(IL,J)*I3(IL,J))/I1(IL,J)**2              
+!     3            *FTEMP(IL)**3                                                
+!     4            +(-5.*I1(IL,J)*I2(IL,J)*I3(IL,J)+5.*I2(IL,J)**3              
+!     5            +I1(IL,J)**2*I4(IL,J))/I1(IL,J)**3*FTEMP(IL)**4              
+          F(IL,J)=MAX(F(IL,J),0.)                                              
+          F(IL,J)=MIN(F(IL,J),0.0004)                                          
+        ENDIF                                                                  
+  375 CONTINUE                                                                 
+C                                                                              
+        DO 378 IL=IL1G,IL2G                                                    
+          IF(F(IL,J0(IL)).LT.1.E-6 .AND. J0(IL).LT.JB(IL) .AND.                
+     1       F(IL,J0(IL)+1) .GT. F(IL,J0(IL)) )       J0(IL)=J0(IL)+1          
+ 378    CONTINUE                                                               
+C                                                                              
+       DO 380 J=MSG+2,ILEV                                                     
+       DO 380 IL=IL1G,IL2G                                                     
+         IF(J.GE.JT(IL) .AND. J.LE.J0(IL))                         THEN        
+            F(IL,J)=MAX(F(IL,J),F(IL,J-1))                                     
+         ENDIF                                                                 
+  380 CONTINUE                                                                 
+C                                                                              
+      DO 425 J=ILEV,MSG+1,-1                                                   
+      DO 425 IL=IL1G,IL2G                                                      
+        IF(J.GE.JT(IL) .AND. J.LT.J0(IL))                          THEN        
+          EPS(IL,J)=F(IL,J)                                                    
+        ELSE IF(J.GE.J0(IL) .AND. J.LE.JB(IL))                     THEN        
+          EPS(IL,J)=F(IL,J0(IL))                                               
+        ENDIF                                                                  
+  425 CONTINUE                                                                 
+C                                                                              
+CCC   ****************************************************************         
+CCC   SPECIFY THE UPDRAFT MASS FLUX MU, ENTRAINMENT EU, DETRAINMENT DU         
+CCC   AND MOIST STATIC ENERGY HU.                                              
+CCC   HERE AND BELOW MU, EU,DU, MD AND ED ARE ALL NORMALIZED BY MB             
+CCC   ****************************************************************         
+C                                                                              
+      DO 475 IL=IL1G,IL2G                                                      
+        EPS0(IL)=F(IL,J0(IL))                                                  
+        IF(EPS0(IL).GT.0.)                                          THEN       
+          MU(IL,JB(IL))=1.                                                     
+          HUB(IL)      =HU(IL,JB(IL))                                          
+          EU(IL,JB(IL))=EPS0(IL)/2.                                            
+        ENDIF                                                                  
+  475 CONTINUE                                                                 
+C                                                                              
+      DO 480 J=ILEV,MSG+1,-1                                                   
+      DO 480 IL=IL1G,IL2G                                                      
+        IF( EPS0(IL).GT.0. .AND. (J.GE.JT(IL).AND.J.LT.JB(IL)) )    THEN       
+          ZUEF(IL)=ZF(IL,J)-ZFB(IL)                                            
+          if (zuef(il).eq.0.)write(*,*)'zuef zero 10',il,zuef(il)
+          RMUE(IL)=(1./EPS0(IL))*(EXP(EPS(IL,J+1)*ZUEF(IL))-1.)/ZUEF(IL)       
+          MU(IL,J)=(1./EPS0(IL))*(EXP(EPS(IL,J)*ZUEF(IL))-1.)/ZUEF(IL)         
+          if (dz(il,j).eq.0.)write(*,*)'dz zero 11',il,j,dz(il,j)
+          EU(IL,J)=(RMUE(IL)-MU(IL,J+1))/DZ(IL,J)                              
+          DU(IL,J)=(RMUE(IL)-MU(IL,J))/DZ(IL,J)                                
+        ENDIF                                                                  
+  480 CONTINUE                                                                 
+C                                                                              
+      DO 500 J=ILEV-1,MSG+1,-1                                                 
+      DO 500 IL=IL1G,IL2G                                                      
+        IF( (J.GE.LEL(IL) .AND. J.LT.JB(IL)) .AND.                             
+     1    IRESET(IL).EQ.0. .AND. EPS0(IL).GT.0.)                    THEN       
+          IF(MU(IL,J).LT.0.01 .OR. HU(IL,J+1).GT.HUB(IL))        THEN          
+            HU(IL,J)=HUB(IL)                                                   
+            MU(IL,J)=0.                                                        
+            JT(IL)=J+1                                                         
+            IRESET(IL)=1.                                                      
+C           PRINT *,'JT DUE TO TOO MUCH DETRAINMENT  ===',JT(IL),              
+C    1              'IL= ',IL                                                  
+          ELSE                                                                 
+            HU(IL,J)=MU(IL,J+1)/MU(IL,J)*HU(IL,J+1)+DZ(IL,J)/MU(IL,J)*         
+     1               (EU(IL,J)*HMN(IL,J)-DU(IL,J)*HSAT(IL,J))                  
+            IF (HU(IL,J).LE.HSTHAT(IL,J)   .AND.                               
+     1          HU(IL,J+1).GT.HSTHAT(IL,J+1))         THEN                     
+              JT(IL)=J                                                         
+              IRESET(IL)=2.                                                    
+C             PRINT *,'JT DUE TO OVERSHOOTING ===',JT(IL),' IL= ',IL           
+            ENDIF                                                              
+          ENDIF                                                                
+        ENDIF                                                                  
+  500 CONTINUE                                                                 
+C                                                                              
+      DO 600 J=ILEV,MSG+1,-1                                                   
+      DO 600 IL=IL1G,IL2G                                                      
+        IF( J.GE.LEL(IL) .AND. J.LE.JT(IL)                                     
+     1                     .AND. EPS0(IL).GT.0. )                   THEN       
+          MU(IL,J)=0.                                                          
+          EU(IL,J)=0.                                                          
+          DU(IL,J)=0.                                                          
+          HU(IL,J)=HUB(IL)                                                     
+        ENDIF                                                                  
+        IF(J.EQ.JT(IL) .AND. EPS0(IL).GT.0.)                        THEN       
+          if (dz(il,j).eq.0.)write(*,*)'dz zero 12',il,j,dz(il,j)
+          DU(IL,J)=MU(IL,J+1)/DZ(IL,J)                                         
+        ENDIF                                                                  
+  600 CONTINUE                                                                 
+C                                                                              
+CCC   ******************************************************************       
+CCC   SPECIFY DOWNDRAFT PROPERTIES (NO DOWNDRAFTS IF JD.GE.JB).                
+C     SCALE DOWN DOWNWARD MASS FLUX PROFILE SO THAT NET FLUX                   
+C     (UP-DOWN) AT CLOUD BASE IN NOT NEGATIVE.                                 
+CCC   ************************************************************             
+C                                                                              
+      DO 625 IL=IL1G,IL2G                                                      
+        JD(IL)=MAX(J0(IL),JT(IL)+1)                                            
+        ZFD(IL)=ZF(IL,JD(IL))                                                  
+        HD(IL,JD(IL))=HMN(IL,JD(IL)-1)                                         
+        FACT(IL)=2.*EPS0(IL)*(ZFD(IL)-ZFB(IL))                                 
+        IF(FACT(IL).GT.0.)                                         THEN        
+          ALFA(IL)=FACT(IL)/(EXP(FACT(IL))-1.)                                 
+        ELSE                                                                   
+          ALFA(IL)=0.                                                          
+        ENDIF                                                                  
+  625 CONTINUE                                                                 
+C                                                                              
+      DO 630 J=MSG+1,ILEV                                                      
+      DO 630 IL=IL1G,IL2G                                                      
+        ZDEF(IL)=ZFD(IL)-ZF(IL,J)                                              
+        IF((J.EQ.JD(IL)) .AND. FACT(IL).GT.0.)                      THEN       
+          MD(IL,J)=-ALFA(IL)                                                   
+        ENDIF                                                                  
+        IF((J.EQ.JB(IL)) .AND. FACT(IL).GT.0.)                      THEN       
+          MD(IL,J)=-1.                                                         
+        ENDIF                                                                  
+        IF((J.LT.JB(IL)) .AND. ZDEF(IL).GT.0. .AND. EPS0(IL).GT.0.) THEN       
+          MD(IL,J)=-ALFA(IL)/(2.*EPS0(IL))*(EXP(2.*EPS0(IL)*ZDEF(IL))          
+     1             -1.)/ZDEF(IL)                                               
+        ENDIF                                                                  
+  630 CONTINUE                                                                 
+C                                                                              
+      DO 650 J=MSG+1,ILEV                                                      
+      DO 650 IL=IL1G,IL2G                                                      
+        IF((J.GT.JD(IL) .AND. J.LE.JB(IL)) .AND. EPS0(IL).GT.0.)    THEN       
+          if (dz(il,j-1).eq.0.)write(*,*)'dz j-1 zero 13',il,j-1,dz(il,j-1)
+          ED(IL,J-1)=(MD(IL,J-1)-MD(IL,J))/DZ(IL,J-1)                          
+          if (md(il,j).eq.0.)write(*,*)'md zero 14',il,j,md(il,j)
+          HD(IL,J)=MD(IL,J-1)/MD(IL,J)*HD(IL,J-1)                              
+     1             -DZ(IL,J-1)/MD(IL,J)*ED(IL,J-1)*HMN(IL,J-1)                 
+        ENDIF                                                                  
+  650 CONTINUE                                                                 
+C                                                                              
+CCC   *********************************************************                
+CCC   CALCULATE UPDRAFT AND DOWNDRAFT EFFECTS ON Q AND S.                      
+CCC   *********************************************************                
+C                                                                              
+      DO 670 K=MSG+2,ILEV                                                      
+      DO 670 IL=IL1G,IL2G                                                      
+        IF((K.GE.JD(IL) .AND. K.LE.JB(IL)) .AND. EPS0(IL).GT.0.                
+     1                                     .AND. JD(IL).LT.JB(IL))  THEN       
+C         SD(IL,K) = SHAT(IL,K)                                                
+C    1             +              (HD(IL,K)-HSTHAT(IL,K))/                     
+C    2               (CP    *(1.+GAMHAT(IL,K)))                                
+          QDS(IL,K) = QSTHAT(IL,K)                                             
+     1             + GAMHAT(IL,K)*(HD(IL,K)-HSTHAT(IL,K))/                     
+     2               (RRL*(1.+GAMHAT(IL,K)))                                   
+        ENDIF                                                                  
+  670 CONTINUE                                                                 
+C                                                                              
+      DO 690 J=ILEV,MSG+2,-1                                                   
+      DO 680 IL=IL1G,IL2G                                                      
+        IF(EPS0(IL).GT.0. .AND. JLCL(IL).EQ.0.)                     THEN       
+          IF(J.GT.JT(IL) .AND. J.LT.JB(IL))     THEN                           
+            SU(IL,J)=MU(IL,J+1)/MU(IL,J)*SU(IL,J+1)                            
+     1              +DZ(IL,J)/MU(IL,J)*(EU(IL,J)-DU(IL,J))*S(IL,J)             
+            QU(IL,J)=MU(IL,J+1)/MU(IL,J)*QU(IL,J+1)                            
+     1        +DZ(IL,J)/MU(IL,J)*(EU(IL,J)*Q(IL,J)-DU(IL,J)*QST(IL,J))         
+            TU(IL)=SU(IL,J)-GRAV/CP*ZF(IL,J)                                   
+            ESTU=EXP(A-B/TU(IL))                                               
+            QSTU=EPS1*ESTU/((P(IL,J)+P(IL,J-1))/2.-ESTU)                       
+            IF(QU(IL,J) .GE. QSTU)                     THEN                    
+              JLCL(IL)=REAL(J)                                                 
+            ENDIF                                                              
+          ENDIF                                                                
+        ENDIF                                                                  
+ 680  CONTINUE                                                                 
+ 690  CONTINUE                                                                 
+C                                                                              
+      IF(ITRAC.NE.0) THEN                                                      
+         DO N=1,NTRAC                                                          
+           IF(ITRPHS(N).GT.0)                                   THEN           
+             DO 695 J=ILEV,MSG+2,-1                                            
+             DO 695 IL=IL1G,IL2G                                               
+               IF(EPS0(IL).GT.0. .AND. 
+     1            (J.GT.JT(IL) .AND. J.LT.JB(IL)) .AND.
+     2             MU(IL,J+1).NE.0. )              THEN                   
+CP                 IF ( DU(IL,J).NE.0. ) THEN                            
+                 IF ( (DU(IL,J)-EU(IL,J)).NE.0. ) THEN
+                   AEXP=EU(IL,J)/(DU(IL,J)-EU(IL,J))                           
+                 ELSE                                                          
+                   AEXP=-1.                                                    
+                 ENDIF                                                         
+                 XU(IL,J,N)=X(IL,J,N)+(XU(IL,J+1,N)-X(IL,J,N))                 
+     1                      *(ABS(MU(IL,J)/MU(IL,J+1)))**AEXP                  
+               ENDIF                                                           
+  695        CONTINUE                                                          
+           ENDIF                                                               
+         ENDDO                                                                 
+      ENDIF                                                                    
+C                                                                              
+      DO 700 J=MSG+2,ILEV                                                      
+      DO 700 IL=IL1G,IL2G                                                      
+        IF(EPS0(IL).GT.0.)                                          THEN       
+          IF(J.EQ.JB(IL))                                     THEN             
+            QU(IL,J)=Q(IL,MX(IL))                                              
+            SU(IL,J)=(HU(IL,J)-RRL*QU(IL,J))/CP                                
+          ENDIF                                                                
+          IF(J.GT.JT(IL) .AND. J.LE.NINT(JLCL(IL)))           THEN             
+            SU(IL,J) = SHAT(IL,J)                                              
+     1               +              (HU(IL,J)-HSTHAT(IL,J))/                   
+     2               (CP    *(1.+GAMHAT(IL,J)))                                
+            QU(IL,J) = QSTHAT(IL,J)                                            
+     1               + GAMHAT(IL,J)*(HU(IL,J)-HSTHAT(IL,J))/                   
+     2               (RRL*(1.+GAMHAT(IL,J)))                                   
+                                                                               
+          ENDIF                                                                
+        ENDIF                                                                  
+  700 CONTINUE                                                                 
+C                                                                              
+      IF(ITRAC.NE.0) THEN                                                      
+         DO N=1,NTRAC                                                          
+           IF(ITRPHS(N).GT.0)                                   THEN           
+             DO 725 IL=IL1G,IL2G                                               
+               IF(EPS0(IL).GT.0.) THEN                                         
+                 XU(IL,JB(IL),N) = X(IL,MX(IL),N)                              
+               ENDIF                                                           
+  725        CONTINUE                                                          
+           ENDIF                                                               
+         ENDDO                                                                 
+      ENDIF                                                                    
+C                                                                              
+      DO 750 J=ILEV,MSG+2,-1                                                   
+      DO 750 IL=IL1G,IL2G                                                      
+        IF(J.GE.JT(IL) .AND. J.LT.JB(IL) .AND. EPS0(IL) .GT. 0.)  THEN         
+          CU(IL,J)=((MU(IL,J)*SU(IL,J)-MU(IL,J+1)*SU(IL,J+1))/DZ(IL,J)         
+     1            -(EU(IL,J)-DU(IL,J))*S(IL,J))/(RRL/CP)                       
+          IF(J.EQ.JT(IL)) CU(IL,J)=0.                                          
+        ENDIF                                                                  
+  750 CONTINUE                                                                 
+C                                                                              
+      BETA=1.                                                                  
+      DO 800 J=ILEV,MSG+2,-1                                                   
+      DO 800 IL=IL1G,IL2G                                                      
+        IF( J.GE.JT(IL) .AND. J.LT.JB(IL) .AND. EPS0(IL).GT.0.                 
+     1                  .AND. MU(IL,J).GE.0.0 )                     THEN       
+          FAC=MAX(T(IL,JB(IL))-T(IL,J),0.)/MAX(T(IL,JB(IL))-TFREEZ, 1.)        
+          C0=(2.0e-3)*MIN(FAC**2, 1.)                                          
+          DENOM(IL)=(MU(IL,J)+DZ(IL,J)*BETA*DU(IL,J)                           
+     1          +DZ(IL,J)*C0*(BETA*MU(IL,J)+(1.-BETA)*MU(IL,J+1))*BETA)        
+          IF(DENOM(IL).GT.0.)                                 THEN             
+             QL(IL,J)=1./DENOM(IL)                                             
+     1        *( MU(IL,J+1)*QL(IL,J+1)-DZ(IL,J)*DU(IL,J)*(1.-BETA)             
+     2        *QL(IL,J+1)+DZ(IL,J)*CU(IL,J)-DZ(IL,J)*C0*(BETA*MU(IL,J)         
+     3        +(1.-BETA)*MU(IL,J+1))*(1.-BETA)*QL(IL,J+1))                     
+          ELSE                                                                 
+             QL(IL,J)=0.                                                       
+          ENDIF                                                                
+          TOTPCP(IL)=TOTPCP(IL)+DZ(IL,J)*(CU(IL,J)                             
+     1               -DU(IL,J)*(BETA*QL(IL,J)+(1.-BETA)*QL(IL,J+1)))           
+        ENDIF                                                                  
+  800 CONTINUE                                                                 
+C                                                                              
+      PIE=60.0                                                                 
+      DO 850 J=MSG+1,ILEV                                                      
+      DO 850 IL=IL1G,IL2G                                                      
+        IF(J.EQ.JD(IL))                                         THEN           
+          QD(IL,J)=QDS(IL,J)                                                   
+          SD(IL,J)=(HD(IL,J)-RRL*QD(IL,J) )/CP                                 
+        ENDIF                                                                  
+  850 CONTINUE                                                                 
+C                                                                              
+      DO 900 J=MSG+2,ILEV                                                      
+      DO 900 IL=IL1G,IL2G                                                      
+        IF((J.GE.JD(IL) .AND. J.LT.JB(IL)) .AND. EPS0(IL).GT.0.                
+     1                                     .AND. JD(IL).LT.JB(IL))  THEN       
+          QD(IL,J+1)=QDS(IL,J+1)                                               
+          SD(IL,J+1)=(HD(IL,J+1)-RRL*QD(IL,J+1))/CP                            
+          TOTEVP(IL)=TOTEVP(IL)-DZ(IL,J)*ED(IL,J)*Q(IL,J)                      
+        ENDIF                                                                  
+  900 CONTINUE                                                                 
+C                                                                              
+      IF(ITRAC.NE.0) THEN                                                      
+       DO N=1,NTRAC                                                            
+         IF(ITRPHS(N).GT.0)                                   THEN             
+C                                                                              
+           DO 910 IL=IL1G,IL2G                                                 
+             XD(IL,JD(IL),N)=X(IL,JD(IL)-1,N)                                  
+  910      CONTINUE                                                            
+C                                                                              
+           DO 920 J=MSG+2,ILEV                                                 
+           DO 920 IL=IL1G,IL2G                                                 
+             IF((J.GT.JD(IL) .AND. J.LE.JB(IL)) .AND. EPS0(IL).GT.0.           
+     1                                    .AND. JD(IL).LT.JB(IL))  THEN        
+               XD(IL,J,N)=X(IL,J-1,N)+(XD(IL,J-1,N)-X(IL,J-1,N))               
+     1                               *(MD(IL,J-1)/MD(IL,J))                    
+             ENDIF                                                             
+  920      CONTINUE                                                            
+         ENDIF                                                                 
+       ENDDO                                                                   
+      ENDIF                                                                    
+C                                                                              
+      DO 925 IL=IL1G,IL2G                                                      
+        TOTEVP(IL)=TOTEVP(IL)+MD(IL,JD(IL))*Q(IL,JD(IL)-1)                     
+     1                       -MD(IL,JB(IL))*QD(IL,JB(IL))                      
+  925 CONTINUE                                                                 
+C                                                                              
+      WEIGHT=1.0                                                               
+      DO 950 J=MSG+2,ILEV                                                      
+      DO 950 IL=IL1G,IL2G                                                      
+        IF(TOTEVP(IL).NE.0.)                                        THEN       
+          MD(IL,J)=MD(IL,J)*MIN(1.,WEIGHT*TOTPCP(IL)                           
+     1                           /(TOTEVP(IL)+WEIGHT*TOTPCP(IL)))              
+          ED(IL,J)=ED(IL,J)*MIN(1.,WEIGHT*TOTPCP(IL)                           
+     1                           /(TOTEVP(IL)+WEIGHT*TOTPCP(IL)))              
+        ENDIF                                                                  
+  950 CONTINUE                                                                 
+C                                                                              
+c      do il=il1g,il2g
+c       summc(il) = 0.
+c      enddo
+      DO 975 J=MSG+1,ILEV                                                      
+      DO 975 IL=IL1G,IL2G                                                      
+        IF(J.GE.JT(IL) .AND. J.LE.JB(IL))                           THEN       
+          MC(IL,J)=MU(IL,J)+MD(IL,J)                                           
+c          summc(il) = summc(il) + mc(il,j)
+c          write(*,*)'adding summc ',il,j,summc(il),mc(il,j)
+        ENDIF                                                                  
+  975 CONTINUE                                                                 
+c      do il=il1g,il2g
+c      write(*,*)'summc ',il,summc(il)
+cc      enddo
+                                                                         
+      RETURN                                                                   
+      END                                                                      

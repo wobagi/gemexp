@@ -1,0 +1,136 @@
+!c ########## start aero_chem_order.cdk ##########
+
+      integer gn_aerochem
+      parameter (gn_aerochem=75)
+
+      integer aerochem_np
+      parameter (aerochem_np=5)
+
+      integer aero_nsize
+      parameter (aero_nsize=12) 
+
+      real aerosize1(13) 
+      data aerosize1 /0.005,0.01,0.02,0.04,0.08,0.16,0.32,0.64,1.28,2.56,5.12,10.24,20.48 /
+
+      real rhop0(aerochem_np)
+
+      character*8 aeroname(aerochem_np)
+     
+
+      integer cncaSS1,cncaSS2,cncaSS3,cncaSS4,cncaSS5,cncaSS6
+      integer cncaSS7,cncaSS8,cncaSS9,cncaSS10,cncaSS11,cncaSS12
+
+      integer cncaSF1,cncaSF2,cncaSF3,cncaSF4,cncaSF5,cncaSF6
+      integer cncaSF7,cncaSF8,cncaSF9,cncaSF10,cncaSF11,cncaSF12
+
+      integer cncaBC1,cncaBC2,cncaBC3,cncaBC4,cncaBC5,cncaBC6
+      integer cncaBC7,cncaBC8,cncaBC9,cncaBC10,cncaBC11,cncaBC12
+
+      integer cncaOC1,cncaOC2,cncaOC3,cncaOC4,cncaOC5,cncaOC6
+      integer cncaOC7,cncaOC8,cncaOC9,cncaOC10,cncaOC11,cncaOC12
+
+      integer cncaSD1,cncaSD2,cncaSD3,cncaSD4,cncaSD5,cncaSD6
+      integer cncaSD7,cncaSD8,cncaSD9,cncaSD10,cncaSD11,cncaSD12
+
+      integer cncaNO3,cncaOH,cncaO3
+      integer cncaH2O2,cncaSO2,cncaDMS,cncaH2S,cncaSO4
+      integer cncaCO2,cncaHNO3,cncaNH3,cncaCCN,cncaLWC
+      integer cncaIWC,cncaCLF
+      INTEGER IAE1, IAE2
+      INTEGER NCAM
+!C
+!C     IAE1 - FIRST AEROSOL BIN TRACER
+!C     IAE2 - LAST AEROSOL BIN TRACER
+!c
+      parameter (cncaSS1    = 1)
+      parameter (cncaSS2    = 2)
+      parameter (cncaSS3   = 3)
+      parameter (cncaSS4   = 4)
+      parameter (cncaSS5  = 5)
+      parameter (cncaSS6  = 6)
+      parameter (cncaSS7  = 7)
+      parameter (cncaSS8  = 8)
+      parameter (cncaSS9   = 9)
+      parameter (cncaSS10   = 10)
+      parameter (cncaSS11  = 11)
+      parameter (cncaSS12 = 12)
+
+      parameter (cncaSF1 = 13)
+      parameter (cncaSF2 = 14)
+      parameter (cncaSF3 = 15)
+      parameter (cncaSF4    = 16)
+      parameter (cncaSF5  = 17)
+      parameter (cncaSF6 = 18)
+      parameter (cncaSF7 = 19)
+      parameter (cncaSF8  = 20)
+      parameter (cncaSF9  = 21)
+      parameter (cncaSF10  = 22)
+      parameter (cncaSF11 = 23)
+      parameter (cncaSF12 = 24)
+
+      parameter (cncaBC1 = 25)
+      parameter (cncaBC2 = 26)
+      parameter (cncaBC3 = 27)
+      parameter (cncaBC4    = 28)
+      parameter (cncaBC5  = 29)
+      parameter (cncaBC6 = 30)
+      parameter (cncaBC7 = 31)
+      parameter (cncaBC8  = 32)
+      parameter (cncaBC9  = 33)
+      parameter (cncaBC10  = 34)
+      parameter (cncaBC11 = 35)
+      parameter (cncaBC12 = 36)
+!c
+      parameter (cncaOC1 = aero_nsize*3+1)
+      parameter (cncaOC2 = aero_nsize*3+2)
+      parameter (cncaOC3 = aero_nsize*3+3)
+      parameter (cncaOC4 = aero_nsize*3+4)
+      parameter (cncaOC5 = aero_nsize*3+5)
+      parameter (cncaOC6 = aero_nsize*3+6)
+      parameter (cncaOC7 = aero_nsize*3+7)
+      parameter (cncaOC8 = aero_nsize*3+8)
+      parameter (cncaOC9 = aero_nsize*3+9)
+      parameter (cncaOC10 = aero_nsize*3+10)
+      parameter (cncaOC11 = aero_nsize*3+11)
+      parameter (cncaOC12 = aero_nsize*3+12)
+!C
+      parameter (cncaSD1 = aero_nsize*4+1)
+      parameter (cncaSD2 = aero_nsize*4+2)
+      parameter (cncaSD3 = aero_nsize*4+3)
+      parameter (cncaSD4 = aero_nsize*4+4)
+      parameter (cncaSD5 = aero_nsize*4+5)
+      parameter (cncaSD6 = aero_nsize*4+6)
+      parameter (cncaSD7 = aero_nsize*4+7)
+      parameter (cncaSD8 = aero_nsize*4+8)
+      parameter (cncaSD9 = aero_nsize*4+9)
+      parameter (cncaSD10 = aero_nsize*4+10)
+      parameter (cncaSD11 = aero_nsize*4+11)
+      parameter (cncaSD12 = aero_nsize*4+12)     ! # 60
+
+      parameter (IAE1=cncaSS1)
+      parameter (IAE2=cncaSD12)
+      parameter (NCAM = IAE2)
+!C
+!                                         !60+ 
+      parameter (cncaDMS = IAE2+1)         ! 1
+      parameter (cncaH2S = IAE2+2)         ! 2
+
+      parameter (cncaCO2 = IAE2+3)         ! 3     to be diff/conv in gas phase
+      parameter (cncaNH3 = IAE2+4)         ! 4     to be diff/conv in gas phase
+      parameter (cncaSO4 = IAE2+5)         ! 5     to be diff/conv in gas phase
+!
+      parameter (cncaCCN = IAE2+6)         ! 6     }
+      parameter (cncaLWC = IAE2+7)         ! 7     }>  these fields are from physics
+      parameter (cncaIWC = IAE2+8)         ! 8     }>  NO need to diff/conv 
+      parameter (cncaCLF = IAE2+9)         ! 9     }   hands OFF
+!
+      parameter (cncaNO3 = IAE2+10)        !10     to be diff/conv in gas phase
+      parameter (cncaOH  = IAE2+11)        !11     to be diff/conv in gas phase
+      parameter (cncaO3  = IAE2+12)        !12     to be diff/conv in gas phase
+      parameter (cncaH2O2= IAE2+13)        !13     to be diff/conv in gas phase
+      parameter (cncaSO2 = IAE2+14)        !14     to be diff/conv in gas phase
+      parameter (cncaHNO3= IAE2+15)        !15     to be diff/conv in gas phase
+                                        ! total 75 
+
+      integer gn_aerodiags
+      parameter (gn_aerodiags=2)

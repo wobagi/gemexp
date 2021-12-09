@@ -1,0 +1,113 @@
+	program sza_test
+        implicit none
+        real    sza
+        real lat, lon
+        integer julian_day, hour
+
+
+          INTEGER I,LMX
+	  parameter(LMX=1)
+          REAL XLAT(LMX),XLON(LMX),SCOS(LMX),HZ,DATE
+          REAL DH,SDEC,CDEC,RDEC,AJOUR,SSIN(LMX),STAN(LMX),BSIN(LMX),BCOS(LMX)
+
+
+ 	xlat=0.0
+    	xlon=0.0
+    	do julian_day=1,366 ! 180
+        date=julian_day
+    	do hour=12,12 ! 0,23
+           hz=hour
+           call  SUNCOS1(SCOS,SSIN,STAN,BSIN,BCOS,LMX,XLAT,XLON,HZ,DATE)
+           sza=acos(scos(1))*180/3.14159265358979
+	   write(*,*) 'hour=',hour,' sza=',sza, ' jd=',julian_day
+       end do
+       end do
+       stop
+       end
+
+
+!-------------------------------------- LICENCE END --------------------------------------
+***S/P SUNCOS1
+*
+!copyright (C) 2001  MSC-RPN COMM  %%%RPNPHY%%%
+
+      SUBROUTINE SUNCOS1(SCOS,SSIN,STAN,BSIN,BCOS,LMX,XLAT,XLON,HZ,DATE)
+
+!-------------------------------------- LICENCE BEGIN ------------------------------------
+      implicit none
+          INTEGER I,LMX
+          REAL XLAT(LMX),XLON(LMX),SCOS(LMX),HZ,DATE
+          REAL DH,SDEC,CDEC,RDEC,AJOUR,SSIN(LMX),STAN(LMX),BSIN(LMX),BCO
+     %S(LMX)
+          REAL A,EOT
+          LOGICAL slope_L
+*
+*          to calculate the cosines of the solar angle for LMX
+*          points
+*
+*Arguments
+*
+*          - Output -
+* SCOS     cosines of the solar angle
+* SSIN     sine of the solar angle
+* STAN     tangents of the solar angle
+* BSIN     sines of beta 
+* BCOS     cosines of beta 
+*
+*          - Input -
+* LMX      number of points
+* XLAT     latitude in radians
+* XLON     longitude in radians
+* HZ       Greenwich hour (0 to 24)
+* DATE     julian day (0 to 366) (real number)
+*
+**
+*
+*
+      REAL tmcos(LMX)
+      
+      REAL tmsin(LMX)
+*
+      real pi
+
+      PI=3.14159265358979
+
+      IF(DATE.NE.0.) AJOUR=DATE
+      RDEC=0.412*COS((AJOUR+10.)*2.*PI/365.25 -PI)
+      SDEC=SIN(RDEC)
+      CDEC=COS(RDEC)
+c correction for "equation of time"
+      A = DATE/365.*2.*PI
+c in minutes
+      EOT = .002733 -7.343*sin(a)+ .5519*cos(a) -9.47*sin(2.*a)
+     x  -3.02*cos(2.*a) -.3289*sin(3.*a) -.07581*cos(3.*a)
+     x -.1935*sin(4.*a) -.1245*cos(4.*a)
+
+      EOT=EOT/60.   !  express in a fraction of hour
+      EOT=EOT*15.*PI/180.  ! express in radians
+c
+      call VSCOS(tmcos,XLAT(1),LMX)
+      call VSSIN(tmsin,XLAT(1),LMX)
+*
+      DO I=1,LMX
+      DH=HZ*PI/12. +XLON(I) -PI + EOT
+      SCOS(I)=AMAX1(tmsin(I)*SDEC + tmcos(I) * CDEC * COS(DH) , 0.00001)
+      ENDDO
+C----------------------------------------------------------
+
+      RETURN
+      END
+      subroutine vscos(y,x,n)
+      real*4 x(*),y(*)
+      do 10 j=1,n
+      y(j)=cos(x(j))
+   10 continue
+      return
+      end
+      subroutine vssin(y,x,n)
+      real*4 x(*),y(*)
+      do 10 j=1,n
+      y(j)=sin(x(j))
+   10 continue
+      return
+      end

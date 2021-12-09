@@ -1,0 +1,211 @@
+      SUBROUTINE CLOSUR5(Q,T,P,Z,S,TP,QS,QU,SU,MC,DU,MU,MD,QD,SD,ALPHA, 
+     1                   QHAT,SHAT,DP,QSTP,ZF,QL,DSUBCLD,MB,QDB,SDB,    
+     2                   BETAU,BETAD,CAPE,TL,LCL,LEL,JT,MX,ILEV,ILG,    
+     3                   IL1G,IL2G,RD,GRAV,CP,MSG,CAPELMT,              
+     4                   DTPDT,DQSDTP,DTMDT,DQMDT,DBOYDT,               
+     5                   THETAVP,THETAVM,                               
+     6                   DTBDT,DQBDT,DTLDT,RL,PMAX,
+     7                   TMAX,QMAX,QHATMAX,SHATMAX,SUMAX,
+     8                   SDMAX,MUMAX,MDMAX,QUMAX,QDMAX,
+     9                   DADT                                          )
+
+C     * JUN 10/98 - M.LAZARE. BUGFIX WHERE EXTRA CONTINUATION LINE
+C     *                       IN CALCULATION OF "THETAVM" IN LOOP
+C     *                       250 HAS BEEN REMOVED (THIS BUG HAS
+C     *                       BEEN THERE SINCE INCEPTION OF DEEP
+C     *                       SCHEME.
+C     * JUN 26/96 - M.LAZARE. PREVIOUS VERSION CLOSUR4.
+                                                                        
+      IMPLICIT REAL (A-H,O-Z),
+     +INTEGER (I-N)
+
+      REAL        Q(ILG,ILEV),      T(ILG,ILEV),      P(ILG,ILEV),      
+     1            Z(ILG,ILEV),      S(ILG,ILEV),     TP(ILG,ILEV),      
+     2           QS(ILG,ILEV),     QU(ILG,ILEV),     SU(ILG,ILEV),      
+     3           MC(ILG,ILEV),     DU(ILG,ILEV),     MU(ILG,ILEV),      
+     4           MD(ILG,ILEV),     QD(ILG,ILEV),     SD(ILG,ILEV),      
+     5        ALPHA(ILG,ILEV),   QHAT(ILG,ILEV),   SHAT(ILG,ILEV),      
+     6           DP(ILG,ILEV),   QSTP(ILG,ILEV),     ZF(ILG,ILEV),      
+     7           QL(ILG,ILEV)                                           
+                                                                        
+      REAL       MB(ILG),         QDB(ILG),         SDB(ILG),           
+     1        BETAU(ILG),       BETAD(ILG),        CAPE(ILG),           
+     2           TL(ILG),     DSUBCLD(ILG)                              
+                                                                        
+      INTEGER   LCL(ILG),   LEL(ILG),   JT(ILG),   MX(ILG)              
+                                                                        
+C     * WORK FIELDS:                                                              
+                                                                        
+      REAL    DTPDT(ILG,ILEV), DQSDTP(ILG,ILEV),  DTMDT(ILG,ILEV),      
+     1        DQMDT(ILG,ILEV), DBOYDT(ILG,ILEV),                        
+     2      THETAVP(ILG,ILEV),THETAVM(ILG,ILEV)                         
+                                                                        
+      REAL    DTBDT  (ILG),       DQBDT  (ILG),       DTLDT  (ILG),     
+     1        RL     (ILG),       PMAX   (ILG),       TMAX   (ILG),
+     2        QMAX   (ILG),       QHATMAX(ILG),       SHATMAX(ILG),
+     3        SUMAX  (ILG),       SDMAX  (ILG),       MUMAX  (ILG),
+     4        MDMAX  (ILG),       QUMAX  (ILG),       QDMAX  (ILG),
+     5        DADT   (ILG)   
+C
+      COMMON/EPS   / A,B,EPS1,EPS2                                      
+      COMMON/HTCP  / TFREEZ,T2S,AI,BI,AW,BW,SLP                         
+                                                                        
+      DATA TAU /2400./                                                  
+C---------------------------------------------------------------------------      
+CCC   *************************************************************               
+CCC   CHANGE OF SUBCLOUD LAYER PROPERTIES DUE TO CONVECTION IS                    
+CCC   RELATED TO CUMULUS UPDRAFTS AND DOWNDRAFTS.                                 
+CCC   MC(Z)=F(Z)*MB, MUB=BETAU*MB, MDB=BETAD*MB ARE USED                          
+CCC   TO DEFINE BETAU, BETAD AND F(Z).                                            
+CCC   NOTE THAT THIS IMPLIES ALL TIME DERIVATIVES ARE IN EFFECT                   
+CCC   TIME DERIVATIVES PER UNIT CLOUD-BASE MASS FLUX, I.E. THEY                   
+CCC   HAVE UNITS OF 1/MB INSTEAD OF 1/SEC.                                        
+CCC   *************************************************************
+C
+C     * OBTAIN GATHERED FIELDS AT "MX" FOR ENSUING USE.
+C     * INITIALIZE "DADT" ARRAY.
+C
+      DO 50 K=MSG+1,ILEV 
+      DO 50 IL=IL1G,IL2G
+        IF(K.EQ.MX(IL))                                          THEN
+          PMAX   (IL)=P   (IL,K)
+          TMAX   (IL)=T   (IL,K)
+          QMAX   (IL)=Q   (IL,K)
+          QHATMAX(IL)=QHAT(IL,K)
+          QUMAX  (IL)=QU  (IL,K)
+          QDMAX  (IL)=QD  (IL,K)
+          SHATMAX(IL)=SHAT(IL,K)
+          SUMAX  (IL)=SU  (IL,K)
+          SDMAX  (IL)=SD  (IL,K)
+          MUMAX  (IL)=MU  (IL,K)
+          MDMAX  (IL)=MD  (IL,K) 
+          DADT   (IL)=0.
+        ENDIF 
+   50 CONTINUE      
+C
+      DO 100 IL=IL1G,IL2G                                               
+        MB(IL)=0.                                                       
+        EB=PMAX(IL)*QMAX(IL)/(EPS1+QMAX(IL))                       
+         DTBDT(IL)=(1./DSUBCLD(IL))                                     
+     1    *( MUMAX(IL)*( SHATMAX(IL)-SUMAX(IL) )                   
+     2      +MDMAX(IL)*( SHATMAX(IL)-SDMAX(IL) ) )                 
+         DQBDT(IL)=(1./DSUBCLD(IL))                                     
+     1    *( MUMAX(IL)*( QHATMAX(IL)-QUMAX(IL) )                   
+     2      +MDMAX(IL)*( QHATMAX(IL)-QDMAX(IL) ) )                 
+        DEBDT=EPS1*PMAX(IL)/(EPS1+QMAX(IL))**2*DQBDT(IL)                
+        DTLDT(IL)=-2840.*(3.5/TMAX(IL)*DTBDT(IL)-DEBDT/EB)/             
+     1        (3.5*LOG(TMAX(IL))-LOG(EB)-4.805)**2                      
+  100 CONTINUE
+C                                                                                 
+CCC   ******************************************************************          
+CCC     DTMDT AND DQMDT ARE CUMULUS HEATING AND DRYING.                           
+CCC   ******************************************************************          
+C
+      DO 150 K=MSG+1,ILEV                                               
+      DO 150 IL=IL1G,IL2G                                               
+        DTMDT(IL,K)=0.                                                  
+        DQMDT(IL,K)=0.                                                  
+  150 CONTINUE
+C
+      DO 175 K=MSG+1,ILEV-1                                             
+      DO 175 IL=IL1G,IL2G                                               
+        IF(K.EQ.JT(IL))                                             THEN
+C         RL(IL)=(2.501-.00237*(T(IL,K+1)-TFREEZ))*1.E6                           
+          RL(IL)=2.501E6                                                
+          DTMDT(IL,K)=(1./DP(IL,K))                                     
+     1               *(MU(IL,K+1)*(SU(IL,K+1)-SHAT(IL,K+1)              
+     2                             -RL(IL)/CP*QL(IL,K+1) ) +            
+     3                 MD(IL,K+1)*(SD(IL,K+1)-SHAT(IL,K+1)) )           
+          DQMDT(IL,K)=(1./DP(IL,K))                                     
+     1               *(MU(IL,K+1)*(QU(IL,K+1)-QHAT(IL,K+1)+QL(IL,K+1)) +
+     2                 MD(IL,K+1)*(QD(IL,K+1)-QHAT(IL,K+1)) )           
+        ENDIF                                                           
+  175 CONTINUE                                                          
+C                   
+      BETA=1.                                                           
+      DO 180 K=MSG+1,ILEV-1                                             
+      DO 180 IL=IL1G,IL2G                                               
+        IF(K.GT.JT(IL) .AND. K.LT.MX(IL))                           THEN
+C         RL(IL)=(2.501-.00237*(T(IL,K)-TFREEZ))*1.E6                             
+          RL(IL)=2.501E6                                                
+          DTMDT(IL,K)=(MC(IL,K)*(SHAT(IL,K)-S(IL,K))                    
+     1                +MC(IL,K+1)*(S(IL,K)-SHAT(IL,K+1)))/DP(IL,K)      
+     2      -RL(IL)/CP*DU(IL,K)*(BETA*QL(IL,K)+(1-BETA)*QL(IL,K+1))     
+          DQMDT(IL,K)=(MC(IL,K)*(QHAT(IL,K)-Q(IL,K))                    
+     1                +MC(IL,K+1)*(Q(IL,K)-QHAT(IL,K+1)))/DP(IL,K)      
+     2                +DU(IL,K)*(QS(IL,K)-Q(IL,K))                      
+     3                +DU(IL,K)*(BETA*QL(IL,K)+(1-BETA)*QL(IL,K+1))     
+        ENDIF                                                           
+  180 CONTINUE                                                          
+C                   
+      DO 200 K=MSG+1,ILEV                                               
+      DO 200 IL=IL1G,IL2G                                               
+        IF(K.GE.LEL(IL) .AND. K.LE.LCL(IL))                         THEN
+C         RL(IL)=(2.501-.00237*(TP(IL,K)-TFREEZ))*1.E6                            
+          RL(IL)=2.501E6                                                
+          THETAVP(IL,K)=TP(IL,K)*(1000./P(IL,K))**(RD/CP)               
+     1                  *(1.+1.608*QSTP(IL,K)-QMAX(IL))                 
+          THETAVM(IL,K)=T(IL,K)*(1000./P(IL,K))                         
+     1                  **(RD/CP)*(1.+0.608*Q(IL,K))                    
+          DQSDTP(IL,K)=QSTP(IL,K)*(1.+QSTP(IL,K)/EPS1)                  
+     1                 *EPS1*RL(IL)/(RD*TP(IL,K)**2)                    
+CCC     ******************************************************************        
+CCC       DTPDT IS THE PARCEL TEMPERATURE CHANGE DUE TO CHANGE OF                 
+CCC       SUBCLOUD LAYER PROPERTIES DURING CONVECTION.                            
+CCC     ******************************************************************        
+          DTPDT(IL,K)=TP(IL,K)                                          
+     1               /(1.+RL(IL)/CP*(DQSDTP(IL,K)-QSTP(IL,K)/TP(IL,K)))*
+     2               (   DTBDT(IL)/TMAX(IL)+RL(IL)/CP*                  
+     3               (DQBDT(IL)/TL(IL)-QMAX(IL)/TL(IL)**2*DTLDT(IL)     
+     4                                                                ))
+CCC     ******************************************************************        
+CCC       DBOYDT IS THE INTEGRAND OF CAPE CHANGE.                                 
+CCC     ******************************************************************        
+          DBOYDT(IL,K)=((DTPDT(IL,K)/TP(IL,K)                           
+     1                 +1./(1.+1.608*QSTP(IL,K)-QMAX(IL))               
+     2                 *(1.608*DQSDTP(IL,K)*DTPDT(IL,K)-DQBDT(IL)))     
+     3                 -(DTMDT(IL,K)/T(IL,K)+0.608/(1.+0.608*Q(IL,K))   
+     4                 *DQMDT(IL,K)))*GRAV*THETAVP(IL,K)/THETAVM(IL,K)  
+CCC     ******************************************************************        
+        ENDIF                                                           
+ 200  CONTINUE
+C                                                                                 
+      DO 250 K=MSG+1,ILEV                                               
+      DO 250 IL=IL1G,IL2G                                               
+        IF(K.GT.LCL(IL) .AND. K.LT.MX(IL))                          THEN
+C         RL(IL)=(2.501-.00237*(TP(IL,K)-TFREEZ))*1.E6                            
+          RL(IL)=2.501E6                                                
+          THETAVP(IL,K)=TP(IL,K)*(1000./P(IL,K))**(RD/CP)               
+     1                  *(1.+0.608*QMAX(IL))                            
+          THETAVM(IL,K)=T(IL,K)*(1000./P(IL,K))                         
+     1                  **(RD/CP)*(1.+0.608*Q(IL,K))                    
+CCC     ******************************************************************        
+CCC       DBOYDT IS THE INTEGRAND OF CAPE CHANGE.                                 
+CCC     ******************************************************************        
+          DBOYDT(IL,K)=(DTBDT(IL)/TMAX(IL)                              
+     1                 +0.608/(1.+0.608*QMAX(IL))*DQBDT(IL)             
+     2                 -DTMDT(IL,K)/T(IL,K)                             
+     3                 -0.608/(1.+0.608*Q(IL,K))*DQMDT(IL,K))           
+     4                 *GRAV*THETAVP(IL,K)/THETAVM(IL,K)                
+CCC     ******************************************************************        
+        ENDIF                                                           
+ 250  CONTINUE
+C                                                                                 
+CCCC  *************************************************************               
+CCCC  BUOYANT ENERGY CHANGE IS SET TO 2/3*EXCESS CAPE PER 3 HOURS                 
+CCCC  *************************************************************
+C
+      DO 300 K=MSG+1,ILEV
+      DO 300 IL=IL1G,IL2G
+        IF(K.GE.LEL(IL) .AND. K.LT.MX(IL))                        THEN  
+          DADT(IL)=DADT(IL)+DBOYDT(IL,K)*(ZF(IL,K)-ZF(IL,K+1))   
+        ENDIF                         
+ 300  CONTINUE                                                          
+C         
+      DO 400 IL=IL1G,IL2G                                               
+        DLTAA=-1.*(CAPE(IL)-CAPELMT)*2./3.                              
+        IF(DADT(IL).NE.0.)            MB(IL)=MAX(DLTAA/TAU/DADT(IL),0.) 
+ 400  CONTINUE      
+C                                                                                 
+      RETURN                                                            
+      END        

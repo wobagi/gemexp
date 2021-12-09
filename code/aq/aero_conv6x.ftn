@@ -1,0 +1,842 @@
+       SUBROUTINE CONV6X(T,QH,U,V,PCP,PRESSG,TCV,PBLT,DEL,SHJ,SHBJ,TF,        
+     1                   UTG, VTG, SHTJ, XH, ITRPHS, NTRAC, ITRAC,            
+     b                   CLDCV,ZMLWC,EPS0,DZ,LENGATH,DQLDT,DQLDTG,        !cam_conv
+     2                   VA,IVA,ICD,ILEV,ILEVM,LEV,ILG,IL1,IL2,MSGPHYS,        
+     3                   NUPS,RGAS,GRAV,CPRES,DELT,JLAT,JLATPR,KOUNT,          
+     4                   Q,P,Z,S,QH0,                                          
+     5                   TP,ZF,PF,QSTP,QG,                                     
+     6                   TG,PG,ZG,SG,TPG,                                      
+     7                   ZFG,QSTPG,UG,VG,MU,                                   
+     8                   EU,DQDT,DSDT,DU,MD,                                  
+     9                   ED,ALPHA,SD,QD,MC,                                   
+     A                   QHAT,QU,SU,QS,SHAT,                                   
+     B                   DP,HMN,HSAT,QL,DUDT,                                 
+     C                   DVDT,CAPE,TL,SUMQ,PCPDH,                              
+     D                   RL,SUMDT,SUMDQ,SUMDE,LCL,                             
+     E                   LEL,LON,MAXI,IDEEP,CAPEG,                             
+     F                   TLG,LCLG,LELG,LONG,MAXG,                              
+     G                   BETAU,BETAD,QDB,SDB,DSUBCLD,                         
+     H                   MB,JT,J0,JD,X,                                        
+     I                   XG,XU,XD,XHAT,DXDT,                                   
+     J                   SUMDX,SUMDX2                                 ) 
+C
+C     * FEB 18/2004 - M.LAZARE.  NEW VERSION FOR GCM13D:
+C     *                          - CALLS REVISED CLDPRPX AND Q1Q25X TO
+C     *                            PREVENT NEGATIVE VALUES OF TRACER BEING
+C     *                            GENERATED.  
+C     *                          - "XHAT" CALCULATION REMOVED SINCE NOW
+C     *                            REDFINED IN NEW Q1Q25X.
+C     *                          - "ITRPHS" PASSED IN AND USED TO CONTROL
+C     *                            SELECTIVE PHYSICS CALCULATIONS FOR TRACERS.
+C     * NOV 10/99 - M.LAZARE/    NEW VERSION (CONV6) FOR GCM13. SPECIAL CARE  
+C     *             N.MCFARLANE. TAKEN TO HANDLE CASES WHERE EST.GE.P:         
+C     *                          THE VALUE OF "MSG" FROM THE PHYSICS           
+C     *                          IS PASSED IN AS "MSGPHYS" AND A SEARCH        
+C     *                          DOWN FROM THIS LEVEL IS DONE TO DETERMINE     
+C     *                          THE HIGHEST LEVEL INDEX AROUND THE            
+C     *                          CHAINED LATITUDE CIRCLE WHERE EST.GE.P.       
+C     *                          THIS IS THEN USED AS AN EFFECTIVE "MSG"       
+C     *                          FOR THE SUBSEQUENT DEEP ROUTINES.             
+C     *                          BUOYAN6 AND CLDPRP6 ARE ALSO NEW ROUTINES     
+C     *                          AND THE LOCAL NEGATIVE BUOYANCY LEVEL         
+C     *                          (LEL) IS DEFINED IN BUOYAN6 TO BE BELOW       
+C     *                          ANY LEVEL WHERE EST.GE.P.                     
+C     * FEB 17/98 - M.LAZARE/    PREVIOUS VERSION CONV5 FOR GCM12.             
+C     *             M.HOLZER/                                                  
+C     *             R.HARVEY/                                                  
+C     *             N.MCFARLANE.                                               
+C     * JUN 26/96 - M.LAZARE. PREVIOUS VERSION CONV4 FOR GCM11.                
+C     * NOV 29/94 - M.LAZARE. - PREVIOUS VERSION CONV3 FOR GCM10.              
+C                                                                              
+C     * PERFORMS DEEP CONVECTIVE ADJUSTMENT BASED ON MASS-FLUX CLOSURE         
+C     * ALGORITHM.                                                             
+                                                                               
+C     ************************ INDEX OF VARIABLES **********************       
+C     *  I     => INPUT ARRAYS.                                                
+C     * I/O    => INPUT/OUTPUT ARRAYS.                                         
+C     *  W     => WORK ARRAYS.                                                 
+C     *  WG    => WORK ARRAYS OPERATING ONLY ON GATHERED POINTS.               
+C     * IC     => INPUT DATA CONSTANTS.                                        
+C     *  C     => DATA CONSTANTS PERTAINING TO SUBROUTINE ITSELF.              
+                                                                               
+C  WG * ALPHA    ARRAY OF VERTICAL DIFFERENCING USED (=1. FOR UPSTREAM).       
+C  WG * BETAD    DOWNWARD MASS FLUX AT CLOUD BASE.                             
+C  WG * BETAU    UPWARD   MASS FLUX AT CLOUD BASE.                             
+C  W  * CAPE     CONVECTIVE AVAILABLE POTENTIAL ENERGY.                        
+C  WG * CAPEG    GATHERED CONVECTIVE AVAILABLE POTENTIAL ENERGY.               
+C  C  * CAPELMT  THRESHOLD VALUE FOR CAPE FOR DEEP CONVECTION.                 
+C IC  * CPRES    SPECIFIC HEAT AT CONSTANT PRESSURE IN J/KG-DEGK.              
+C  I  * DEL      LOCAL SIGMA HALF-LEVEL THICKNESS (I.E. DSHJ).                 
+C IC  * DELT     LENGTH OF MODEL TIME-STEP IN SECONDS.                         
+C  WG * DP       LAYER THICKNESS IN MBS (BETWEEN UPPER/LOWER INTERFACE).       
+C  WG * DQDT     MIXING RATIO TENDENCY AT GATHERED POINTS.                     
+C  WG * DSDT     DRY STATIC ENERGY ("TEMP") TENDENCY AT GATHERED POINTS.       
+C  WG * DUDT     U-WIND TENDENCY AT GATHERED POINTS.                           
+C  WG * DVDT     V-WIND TENDENCY AT GATHERED POINTS.                           
+C  WG * DXDT     TRACER TENDENCY AT GATHERED POINTS.                           
+C  WG * DSUBCLD  LAYER THICKNESS IN MBS BETWEEN LCL AND MAXI.                  
+C IC  * GRAV     ACCELERATION DUE TO GRAVITY IN M/SEC2.                        
+C  WG * DU       DETRAINMENT IN UPDRAFT.                                       
+C  WG * ED       ENTRAINMENT IN DOWNDRAFT.                                     
+C  WG * EU       ENTRAINMENT IN UPDRAFT.                                       
+C  WG * HMN      MOIST STATIC ENERGY.                                          
+C  WG * HSAT     SATURATED MOIST STATIC ENERGY.                                
+C  I  * ICD      HOLDS LOCATION OF POINTERS FOR WORK ARRAY "VA".               
+C  W  * IDEEP    HOLDS POSITION OF GATHERED POINTS VS LONGITUDE INDEX.         
+C IC  * ILEV     NUMBER OF MODEL LEVELS.                                       
+C IC  * ILEVM    ILEV-1.                                                       
+C IC  * ILG      LON+2 = SIZE OF GRID SLICE.                                   
+C IC  * IL1,IL2  START AND END LONGITUDE INDICES FOR LATITUDE CIRCLE.          
+C IC  * IVA      SIZE OF WORK ARRAY "VA".                                      
+C  WG * J0       DETRAINMENT INITIATION LEVEL INDEX.                           
+C  WG * JD       DOWNDRAFT   INITIATION LEVEL INDEX.                           
+C IC  * JLAT     GAUSSIAN LATITUDE INDEX.                                      
+C IC  * JLATPR   GAUSSIAN LATITUDE INDEX FOR PRINTING GRIDS (IF NEEDED).       
+C  WG * JT       TOP  LEVEL INDEX OF DEEP CUMULUS CONVECTION.                  
+C IC  * KOUNT    CURRENT MODEL TIMESTEP NUMBER.                                
+C  W  * LCL      BASE LEVEL INDEX OF DEEP CUMULUS CONVECTION.                  
+C  WG * LCLG     GATHERED VALUES OF LCL.                                       
+C  W  * LEL      INDEX OF HIGHEST THEORETICAL CONVECTIVE PLUME.                
+C  WG * LELG     GATHERED VALUES OF LEL.                                       
+C  W  * LON      INDEX OF ONSET LEVEL FOR DEEP CONVECTION.                     
+C  WG * LONG     GATHERED VALUES OF LON.                                       
+C IC  * LEV      ILEV+1.                                                       
+C  W  * MAXI     INDEX OF LEVEL WITH LARGEST MOIST STATIC ENERGY.              
+C  WG * MAXG     GATHERED VALUES OF MAXI.                                      
+C  WG * MB       CLOUD BASE MASS FLUX.                                         
+C  WG * MC       NET UPWARD (SCALED BY MB) CLOUD MASS FLUX.                    
+C  WG * MD       DOWNWARD CLOUD MASS FLUX (POSITIVE UP).                       
+C  WG * MU       UPWARD   CLOUD MASS FLUX (POSITIVE UP).                       
+C IC  * MSGPHYS  NUMBER OF MISSING MOISTURE LEVELS AT THE TOP OF MODEL.        
+C  C  * NUPS     NUMBER OF POINTS UNDERGOING DEEP CONVECTION.                  
+C  W  * P        GRID SLICE OF AMBIENT MID-LAYER PRESSURE IN MBS.              
+C  I  * PBLT     ROW OF PBL TOP INDICES.                                       
+C I/O * PCP      ROW OF PRECIPITABLE WATER IN METRES.                          
+C  W  * PCPDH    SCALED SURFACE PRESSURE.                                      
+C  W  * PF       GRID SLICE OF AMBIENT INTERFACE PRESSURE IN MBS.              
+C  WG * PG       GRID SLICE OF GATHERED VALUES OF P.                           
+C  I  * PRESSG   ROW OF SURFACE PRESSURE IN PA.                                
+C  W  * Q        GRID SLICE OF MIXING RATIO.                                   
+C  WG * QD       GRID SLICE OF MIXING RATIO IN DOWNDRAFT.                      
+C  WG * QDB      ROW OF QD AT CLOUD BASE.                                      
+C  WG * QG       GRID SLICE OF GATHERED VALUES OF Q.                           
+C I/O * QH       GRID SLICE OF SPECIFIC HUMIDITY.                              
+C  W  * QH0      GRID SLICE OF INITIAL SPECIFIC HUMIDITY.                      
+C  WG * QHAT     GRID SLICE OF UPPER INTERFACE MIXING RATIO.                   
+C  WG * QL       GRID SLICE OF CLOUD LIQUID WATER.                             
+C  WG * QS       GRID SLICE OF SATURATION MIXING RATIO.                        
+C  W  * QSTP     GRID SLICE OF PARCEL TEMP. SATURATION MIXING RATIO.           
+C  WG * QSTPG    GRID SLICE OF GATHERED VALUES OF QSTP.                        
+C  WG * QU       GRID SLICE OF MIXING RATIO IN UPDRAFT.                        
+C  IC * RGAS     DRY AIR GAS CONSTANT.                                         
+C  WG * RL       ROW OF LATENT HEAT OF VAPORIZATION.                           
+C  W  * S        GRID SLICE OF SCALED DRY STATIC ENERGY (T+GZ/CP).             
+C  WG * SD       GRID SLICE OF DRY STATIC ENERGY IN DOWNDRAFT.                 
+C  WG * SDB      ROW OF SD AT CLOUD BASE.                                      
+C  WG * SG       GRID SLICE OF GATHERED VALUES OF S.                           
+C  WG * SHAT     GRID SLICE OF UPPER INTERFACE DRY STATIC ENERGY.              
+C  I  * SHBJ     GRID SLICE OF LOCAL BOTTOM INTERFACE SIGMA VALUES.            
+C  I  * SHJ      GRID SLICE OF LOCAL HALF-LEVEL SIGMA VALUES.                  
+C  I  * SHTJ     ROW OF LOCAL TOP INTERFACES OF FIRST LEVEL.                   
+C  WG * SU       GRID SLICE OF DRY STATIC ENERGY IN UPDRAFT.                   
+C  WG * SUMDE    ROW OF VERTICALLY-INTEGRATED MOIST STATIC ENERGY CHANGE.      
+C  WG * SUMDQ    ROW OF VERTICALLY-INTEGRATED SCALED MIXING RATIO CHANGE.      
+C  WG * SUMDT    ROW OF VERTICALLY-INTEGRATED DRY STATIC ENERGY CHANGE.        
+C  WG * SUMDX    ROW OF VERTICALLY-INTEGRATED TRACER VALUES.                   
+C  WG * SUMDX2   CHAINED-LATITUDE SUM OF VERTICALLY-INTEGRATED TRACER          
+C                VALUES (FOR CONSERVATION CHECK).                              
+C  WG * SUMQ     ROW OF VERTICALLY-INTEGRATED MIXING RATIO CHANGE.             
+C I/O * T        GRID SLICE OF TEMPERATURE AT MID-LAYER.                       
+C  O  * TCV      ROW OF TOP-OF-DEEP-CONVECTION INDICES PASSED OUT.             
+C  W  * TF       GRID SLICE OF TEMPERATURE AT INTERFACE.                       
+C  WG * TG       GRID SLICE OF GATHERED VALUES OF T.                           
+C  W  * TL       ROW OF PARCEL TEMPERATURE AT LCL.                             
+C  WG * TLG      GRID SLICE OF GATHERED VALUES OF TL.                          
+C  W  * TP       GRID SLICE OF PARCEL TEMPERATURES.                            
+C  WG * TPG      GRID SLICE OF GATHERED VALUES OF TP.                          
+C I/O * U        GRID SLICE OF U-WIND (REAL).                                  
+C  WG * UG       GRID SLICE OF GATHERED VALUES OF U.                           
+C I/O * UTG      GRID SLICE OF U-WIND TENDENCY (REAL).                         
+C I/O * V        GRID SLICE OF V-WIND (REAL).                                  
+C  W  * VA       WORK ARRAY RE-USED BY CALLED SUBROUTINES.                     
+C  WG * VG       GRID SLICE OF GATHERED VALUES OF V.                           
+C I/O * VTG      GRID SLICE OF V-WIND TENDENCY (REAL).                         
+C  I  * W        GRID SLICE OF DIAGNOSED LARGE-SCALE VERTICAL VELOCITY.        
+C  W  * X        GRID SLICE OF TRACER MIXING RATIOS.                           
+C  W  * XD       GRID SLICE OF CLOUD DOWNDRAFT TRACER VALUES.                  
+C  W  * XG       GRID SLICE OF GATHERED TRACER VALUES.                         
+C I/O * XH       GRID SLICE OF TRACERS (POSSIBLY NOT MIXING RATIO).            
+C  W  * XHAT     GRID SLICE OF UPPER INTERFACE TRACER VALUES.                  
+C  W  * XU       GRID SLICE OF CLOUD UPDRAFT TRACER VALUES.                    
+C  W  * Z        GRID SLICE OF AMBIENT MID-LAYER HEIGHT IN METRES.             
+C  W  * ZF       GRID SLICE OF AMBIENT INTERFACE HEIGHT IN METRES.             
+C  WG * ZFG      GRID SLICE OF GATHERED VALUES OF ZF.                          
+C  WG * ZG       GRID SLICE OF GATHERED VALUES OF Z.                           
+                                                                               
+C     ******************************************************************       
+C                                                                              
+      IMPLICIT REAL (A-H,O-Z),                                                 
+     +INTEGER (I-N)                                                            
+                                                                               
+C     * MULTI-LEVEL I/O FIELDS:                                                
+C                                                                              
+      REAL  T(ILG,ILEV),  QH(ILG,ILEV),    U(ILG,ILEV),     V(ILG,ILEV),       
+     1  DEL(ILG,ILEV),  SHJ(ILG,ILEV),   SHBJ(ILG,ILEV),  TF(ILG,ILEV),        
+     2  UTG(ILG,ILEV),  VTG(ILG,ILEV)                                          
+                                                                               
+      REAL XH(ILG,LEV,NTRAC)                                                   
+      INTEGER ITRPHS(NTRAC)                                                    
+C                                                                              
+C     * SINGLE-LEVEL I/O FIELDS:                                               
+C                                                                              
+      REAL PCP(ILG,ILEV),  PRESSG(ILG),  PBLT(ILG), SHTJ(ILG), TCV(ILG)       !cam_conv
+      REAL CLDCV(ILG,ILEV),ZMLWC(ILG,ILEV)                                    !cam_conv
+      REAL EPS0(ILG),DZ(ILG,ILEV)                                             !cam_conv
+      REAL DQLDT(ILG,ILEV), DQLDTG(ILG,ILEV)                                  !cam_conv
+C                                                                              
+C     * GENERAL WORK FIELDS:                                                   
+C                                                                              
+      REAL   Q(ILG,ILEV),  P(ILG,ILEV),    Z(ILG,ILEV),     S(ILG,ILEV),       
+     1     QH0(ILG,ILEV), TP(ILG,ILEV),   ZF(ILG,ILEV),    PF(ILG,ILEV),       
+     2    QSTP(ILG,ILEV)                                                       
+                                                                               
+      REAL   X(ILG,ILEV,NTRAC)                                                 
+                                                                               
+      REAL   CAPE(ILG),     TL(ILG),  SUMQ(ILG),    PCPDH(ILG),                
+     1         RL(ILG),  SUMDT(ILG), SUMDQ(ILG),    SUMDE(ILG)                 
+                                                                               
+      INTEGER LCL(ILG),    LEL(ILG),   LON(ILG),    MAXI(ILG),                 
+     1      IDEEP(ILG)                                                         
+C                                                                              
+C     * GATHERED WORK FIELDS:                                                  
+C                                                                              
+      REAL  QG(ILG,ILEV), TG(ILG,ILEV),   PG(ILG,ILEV),    ZG(ILG,ILEV),       
+     1      SG(ILG,ILEV),TPG(ILG,ILEV),  ZFG(ILG,ILEV), QSTPG(ILG,ILEV),       
+     2      UG(ILG,ILEV), VG(ILG,ILEV)                                         
+                                                                               
+      REAL  XG(ILG,ILEV,NTRAC)                                                 
+                                                                               
+      REAL   CAPEG(ILG),   TLG(ILG)                                            
+                                                                               
+      INTEGER LCLG(ILG),  LELG(ILG),   LONG(ILG),    MAXG(ILG)                 
+C                                                                              
+C     * WORK FIELDS ARISING FROM GATHERED CALCULATIONS.                        
+C                                                                              
+      REAL  MU(ILG,ILEV), EU(ILG,ILEV), DQDT(ILG,ILEV),  DSDT(ILG,ILEV),       
+     1      DU(ILG,ILEV), MD(ILG,ILEV),   ED(ILG,ILEV), ALPHA(ILG,ILEV),       
+     2      SD(ILG,ILEV), QD(ILG,ILEV),   MC(ILG,ILEV),  QHAT(ILG,ILEV),       
+     3      QU(ILG,ILEV), SU(ILG,ILEV),   QS(ILG,ILEV),  SHAT(ILG,ILEV),       
+     4      DP(ILG,ILEV),HMN(ILG,ILEV), HSAT(ILG,ILEV),    QL(ILG,ILEV),       
+     5    DUDT(ILG,ILEV),DVDT(ILG,ILEV)                                        
+                                                                               
+      REAL  XU(ILG,ILEV,NTRAC),   XD(ILG,ILEV,NTRAC),                          
+     1    XHAT(ILG,ILEV,NTRAC), DXDT(ILG,ILEV,NTRAC)                           
+                                                                               
+      REAL SUMDX(ILG,NTRAC),  SUMDX2(NTRAC)                                    
+                                                                               
+      REAL  BETAU(ILG),  BETAD(ILG),   QDB(ILG),      SDB(ILG),                
+     1    DSUBCLD(ILG),     MB(ILG)                                            
+                                                                               
+      INTEGER   JT(ILG),    J0(ILG),     JD(ILG)                               
+                                                                               
+C     * WORK SPACE RE-USED WITHIN SUBSEQUENT ROUTINES.                         
+                                                                               
+      REAL VA(IVA)                                                             
+!      INTEGER ICD(1)                                                           
+      INTEGER ICD(80)                                                           
+                                                                               
+      COMMON/ADJPCP/ HC,HF,HM,AA,DEPTH,LHEAT,MOIADJ,MOIFLX                     
+      COMMON/EPS   / A,B,EPS1,EPS2                                             
+      COMMON/EPSICE/ AICE,BICE,TICE,QMIN                                       
+      COMMON/HTCP  / TFREEZ,T2S,AI,BI,AW,BW,SLP                                
+                                                                               
+      LOGICAL MOMENTM                                                          
+                                                                               
+      DATA CAPELMT /0./                                                        
+      DATA MOMENTM /.FALSE./                                                   
+C-----------------------------------------------------------------------       
+C     * INITIALIZE NECESSARY ARRAYS.                                           
+C                                                                              
+      CALL PUTZERO (CLDCV, ILG*ILEV)                           !cam_conv
+      CALL PUTZERO (ZMLWC, ILG*ILEV)                           !cam_conv
+      CALL PUTZERO (  PCP, ILG*ILEV)                           !cam_conv
+      DO 50 IL=IL1,IL2                                                         
+!            PCP(IL)  = 0.                                     !cam_conv
+        DSUBCLD(IL)  = 0.                                                      
+           SUMQ(IL)  = 0.                                                      
+           SUMDT(IL) = 0.                                                      
+           SUMDQ(IL) = 0.                                                      
+          PCPDH(IL)  = PRESSG(IL)*DEPTH                                        
+          TCV(IL)    = FLOAT(ILEV)                                             
+   50 CONTINUE                                                                 
+C                                                                              
+      IF(ITRAC.NE.0)        THEN                                               
+C                                                                              
+C         * INITIALIZE TRACER CONSERVATION FIELDS.                             
+C         *   COPY XH INTO THE WORK ARRAY.                                     
+C                                                                              
+          DO N=1,NTRAC                                                         
+            IF(ITRPHS(N).GT.0)                                 THEN            
+              SUMDX2(N)=0.                                                     
+              DO 52 IL=IL1,IL2                                                 
+                  SUMDX(IL,N)=0.                                               
+   52         CONTINUE                                                         
+C                                                                              
+              DO 53 L=1,ILEV                                                   
+              DO 53 IL=IL1,IL2                                                 
+                  X(IL,L,N)=XH(IL,L+1,N)                                       
+   53         CONTINUE                                                         
+            ENDIF                                                              
+          ENDDO                                                                
+      ENDIF                                                                    
+C                                                                              
+C     * CALCULATE LOCAL PRESSURE (MBS) AND HEIGHT (M) FOR BOTH INTERFACE       
+C     * AND MID-LAYER LOCATIONS.                                               
+C                                                                              
+      DO 55 IL=IL1,IL2                                                         
+        P (IL,1) = SHJ (IL,1) * PRESSG(IL) * 0.01                              
+        PF(IL,1) = SHTJ(IL)   * PRESSG(IL) * 0.01                              
+   55 CONTINUE                                                                 
+C                                                                              
+      DO 60 L=2,ILEV                                                           
+      DO 60 IL=IL1,IL2                                                         
+        P (IL,L)   = SHJ (IL,L)   * PRESSG(IL) * 0.01                          
+        PF(IL,L)   = SHBJ(IL,L-1) * PRESSG(IL) * 0.01                          
+   60 CONTINUE                                                                 
+                                                                               
+      ROG=RGAS/GRAV                                                            
+      DO 70 IL=IL1,IL2                                                         
+        Z (IL,ILEV) = ROG*TF(IL,ILEV)*LOG(0.01*PRESSG(IL)/P (IL,ILEV))         
+        ZF(IL,ILEV) = ROG*T (IL,ILEV)*LOG(0.01*PRESSG(IL)/PF(IL,ILEV))         
+   70 CONTINUE                                                                 
+                                                                               
+      DO 80 L=ILEVM,1,-1                                                       
+      DO 80 IL=IL1,IL2                                                         
+        Z (IL,L) = Z (IL,L+1) + ROG*TF(IL,L)*LOG(P (IL,L+1)/P (IL,L))          
+        ZF(IL,L) = ZF(IL,L+1) + ROG*T (IL,L)*LOG(PF(IL,L+1)/PF(IL,L))          
+   80 CONTINUE                                                                 
+C                                                                              
+C     * CALCULATE LOWEST VALUE OF ARRAY AROUND LATITUDE CIRCLE WHERE           
+C     * EST.LT.P BEFORE BECOMING UNPHYSICAL, AND CALCULATE RESULTING           
+C     * "MSG" VALUE FOR THAT CHAINED LATITUDE. USE THIS INSTEAD OF             
+C     * INCOMING "MSGPHYS" PASSED IN TO REDUCE THE NUMBER OF CALCULATIONS.     
+C     * USE WORK ARRAYS "SUMDE" AND "RL" FOR THIS.                             
+C                                                                              
+      DO 85 IL=IL1,IL2                                                         
+         RL   (IL) = 0.                                                        
+         SUMDE(IL) = 0.                                                        
+   85 CONTINUE                                                                 
+C                                                                              
+C     * CALCULATE LOCAL LEVEL INDEX ARRAY ABOVE WHICH                          
+C     * EST.GE.P.                                                              
+C                                                                              
+      DO 90 L=ILEV,1,-1                                                        
+      DO 90 IL=IL1,IL2                                                         
+         IF(L.GT.MSGPHYS) THEN                                                 
+           EST = EXP(A-B/T(IL,L))                                              
+           IF(EST.LT.P(IL,L) .AND. SUMDE(IL).EQ.0.) THEN                       
+             RL(IL)=REAL(L)                                                    
+           ELSE                                                                
+             SUMDE(IL)=-1.                                                     
+           ENDIF                                                               
+         ENDIF                                                                 
+   90 CONTINUE                                                                 
+C                                                                              
+C     * ABORT IF EST.GE.P. FOR ANY POINT IN CHAINED LATITUDE                   
+C     * CIRCLE IN THE LOWEST LAYER.                                            
+C     * ALSO CALCULATE THE HIGHEST LEVEL INDEX AROUND THE CHAINED              
+C     * LATITUDE CIRCLE WHERE EST.GE.P AND USE THIS AS AN EFFECTIVE            
+C     * "MSG" TO REDUCE THE NUMBER OF VERTICAL LEVELS WHICH NEED TO BE         
+C     * PROCESSED IN THE SUBSEQUENT DO LOOPS.                                  
+C                                                                              
+      IPTBAD=0                                                                 
+      MTOP=ILEV                                                                
+      DO 95 IL = IL1, IL2                                                      
+        MTOP=MIN(MTOP,NINT(RL(IL)))                                            
+        IF(RL(IL).EQ.0.) IPTBAD=IPTBAD+1                                       
+   95 CONTINUE                                                                 
+      IF(IPTBAD.NE.0) THEN                                                     
+        PRINT *, '0THERE EXIST POINTS WHERE EST.GE.P IN LOWEST LAYER!'         
+        CALL XIT('CONV5',-1)                                                   
+      ENDIF                                                                    
+      MSG=MTOP-1                                                               
+C                                                                              
+C    * STORE INCOMING SPECIFIC HUMIDITY FIELD FOR SUBSEQUENT CALCULATION       
+C    * OF PRECIPITATION (THROUGH CHANGE IN STORAGE).                           
+C    * CONVERT FROM SPECIFIC HUMIDITY (BOUNDED BY QMIN) TO MIXING RATIO.       
+C    * DEFINE DRY STATIC ENERGY (NORMALIZED BY CP).                            
+C                                                                              
+      DO 100 L=MSG+1,ILEV                                                      
+      DO 100 IL=IL1,IL2                                                        
+        QH0(IL,L) = QH(IL,L)                                                   
+          QEFF    = MAX( QH(IL,L) , QMIN)                                      
+          Q(IL,L) = QEFF/(1.-QEFF)                                             
+          S(IL,L) = T(IL,L) + (GRAV/CPRES)*Z(IL,L)                             
+        DQLDT(IL,L)=0.
+  100 CONTINUE                                                                 
+C                                                                              
+C     * EVALUATE COVECTIVE AVAILABLE POTENTIAL ENERGY (CAPE).                  
+C                                                                              
+      CALL BUOYAN6(Q,T,P,Z,SHBJ,ILEV,ILG,IL1,IL2,TP,QSTP,TL,                   
+     1            CAPE,PBLT,LCL,LEL,LON,MAXI,RGAS,GRAV,CPRES,MSG,ILEVM,        
+     2 VA(ICD( 1)),VA(ICD( 2)),VA(ICD( 3)),VA(ICD( 4)),                        
+     3 VA(ICD(31)),VA(ICD(32)),VA(ICD(33)),VA(ICD(34)),VA(ICD(35)),            
+     4 VA(ICD(36)),VA(ICD(37)),VA(ICD(38)),VA(ICD(39)),VA(ICD(40)),            
+     5 VA(ICD(41)),VA(ICD(42)),VA(ICD(43)),VA(ICD(44)),VA(ICD(45)),            
+     6 VA(ICD(60))                                                    )        
+C                                                                              
+C     * DETERMINE WHETHER GRID POINTS WILL UNDERGO SOME DEEP CONVECTION        
+C     * (IDEEP=1) OR NOT (IDEEP=0), BASED ON VALUES OF CAPE,LCL,LEL            
+C     * (REQUIRE CAPE.GT.100 AND LEL<LCL AS MINIMUM CONDITIONS).               
+C                                                                              
+      JYES = 0                                                                 
+      JNO  = IL2 - IL1 + 2                                                     
+      DO 150 IL=IL1,IL2                                                        
+       IF(CAPE(IL) .GT. CAPELMT)     THEN                                      
+           JYES        = JYES + 1                                              
+           IDEEP(JYES) = IL                                                    
+        ELSE                                                                   
+           JNO         = JNO  - 1                                              
+           IDEEP(JNO)  = IL                                                    
+        ENDIF                                                                  
+  150 CONTINUE                                                                 
+      LENGATH = JYES                                                           
+      IF(LENGATH.EQ.0) RETURN                                                  
+C                                                                              
+C     * OBTAIN GATHERED ARRAYS NECESSARY FOR ENSUING CALCULATIONS.             
+C                                                                              
+      DO 155 L=1,ILEV                                                          
+      DO 155 K=1,LENGATH                                                       
+        DP   (K,L) = 0.01 * PRESSG(IDEEP(K)) * DEL(IDEEP(K),L)                 
+        QG   (K,L) = Q   (IDEEP(K),L)                                          
+        TG   (K,L) = T   (IDEEP(K),L)                                          
+        PG   (K,L) = P   (IDEEP(K),L)                                          
+        ZG   (K,L) = Z   (IDEEP(K),L)                                          
+        SG   (K,L) = S   (IDEEP(K),L)                                          
+        TPG  (K,L) = TP  (IDEEP(K),L)                                          
+        ZFG  (K,L) = ZF  (IDEEP(K),L)                                          
+        QSTPG(K,L) = QSTP(IDEEP(K),L)                                          
+        UG   (K,L) = U   (IDEEP(K),L)                                          
+        VG   (K,L) = V   (IDEEP(K),L)                                          
+  155 CONTINUE                                                                 
+C                                                                              
+      IF(ITRAC.NE.0) THEN                                                      
+         DO N=1,NTRAC                                                          
+           IF(ITRPHS(N).GT.0)                                 THEN             
+             DO 158  L=1,ILEV                                                  
+             DO 158  K=1,LENGATH                                               
+               XG   (K,L,N) = X   (IDEEP(K),L,N)                               
+  158        CONTINUE                                                          
+           ENDIF                                                               
+         ENDDO                                                                 
+      ENDIF                                                                    
+C                                                                              
+      DO 160 K=1,LENGATH                                                       
+        CAPEG(K) = CAPE(IDEEP(K))                                              
+        LCLG (K) = LCL (IDEEP(K))                                              
+        LELG (K) = LEL (IDEEP(K))                                              
+        LONG (K) = LON (IDEEP(K))                                              
+        MAXG (K) = MAXI(IDEEP(K))                                              
+        TLG  (K) = TL  (IDEEP(K))                                              
+        NUPS     = NUPS + 1                                                    
+  160 CONTINUE                                                                 
+C                                                                              
+C     * CALCULATE SUB-CLOUD LAYER PRESSURE "THICKNESS" FOR USE IN              
+C     * CLOSURE AND TENDENCY ROUTINES.                                         
+C                                                                              
+      DO 170 L=MSG+1,ILEV                                                      
+      DO 170 K=1,LENGATH                                                       
+        IF(L.EQ.MAXG(K))                                        THEN           
+          DSUBCLD(K) = DSUBCLD(K) + DP(K,L)                                    
+      ENDIF                                                                    
+  170 CONTINUE                                                                 
+C                                                                              
+C     * DEFINE ARRAY OF FACTORS (ALPHA) WHICH DEFINES INTERFACIAL              
+C     * VALUES, AS WELL AS INTERFACIAL VALUES FOR (Q,S) USED IN                
+C     * SUBSEQUENT ROUTINES.                                                   
+C                                                                              
+      DO 175 L=MSG+2,ILEV                                                      
+      DO 175 K=1,LENGATH                                                       
+        ALPHA(K,L)=1.0                                                         
+        SDIFR=0.                                                               
+        QDIFR=0.                                                               
+        IF(SG(K,L).GT.0. .OR. SG(K,L-1).GT. 0. )                               
+     1     SDIFR=ABS((SG(K,L)-SG(K,L-1))/MAX(SG(K,L-1),SG(K,L)))               
+        IF(QG(K,L).GT.0. .OR. QG(K,L-1).GT. 0. )                               
+     1     QDIFR=ABS((QG(K,L)-QG(K,L-1))/MAX(QG(K,L-1),QG(K,L)))               
+        IF(SDIFR .GT. 1.E-3)                             THEN                  
+           SHAT(K,L)=LOG(SG(K,L-1)/SG(K,L))*SG(K,L-1)*SG(K,L)                  
+     1               /(SG(K,L-1)-SG(K,L))                                      
+        ELSE                                                                   
+           SHAT(K,L)=0.5*(SG(K,L)+SG(K,L-1))                                   
+        ENDIF                                                                  
+        IF(QDIFR .GT. 1.E-3)                             THEN                  
+           QHAT(K,L)=LOG(QG(K,L-1)/QG(K,L))*QG(K,L-1)*QG(K,L)                  
+     1               /(QG(K,L-1)-QG(K,L))                                      
+        ELSE                                                                   
+           QHAT(K,L)=0.5*(QG(K,L)+QG(K,L-1))                                   
+        ENDIF                                                                  
+  175 CONTINUE                                                                 
+C                                                                              
+C     * OBTAIN CLOUD PROPERTIES.                                               
+C                                                                              
+      CALL CLDPRP6X(QG,TG,PG,ZG,SG,MU,EU,DU,MD,ED,SD,QD,MC,QU,SU,ZFG,QS,       
+     1              HMN,HSAT,ALPHA,SHAT,QL,                                 
+     2              XG,XU,XD,ITRPHS,NTRAC,ITRAC,                            
+     3              MAXG,LELG,JT,MAXG,J0,JD,                                
+     4              ILEV,ILG,1,LENGATH,RGAS,GRAV,CPRES,MSG,                 
+!     5 VA(ICD( 1)),VA(ICD( 2)),VA(ICD( 3)),VA(ICD( 4)),VA(ICD( 5)),            
+     5 VA(ICD( 1)),         DZ,VA(ICD( 3)),VA(ICD( 4)),VA(ICD( 5)),    !cam_conv
+     6 VA(ICD( 6)),VA(ICD( 7)),VA(ICD( 8)),VA(ICD( 9)),VA(ICD(10)),            
+     7 VA(ICD(11)),VA(ICD(12)),VA(ICD(13)),VA(ICD(14)),VA(ICD(15)),            
+     8 VA(ICD(16)),VA(ICD(17)),VA(ICD(18)),                                    
+!     9 VA(ICD(31)),VA(ICD(32)),VA(ICD(33)),VA(ICD(34)),VA(ICD(35)),            
+     9 VA(ICD(31)),VA(ICD(32)),VA(ICD(33)),VA(ICD(34)),       EPS0,    !cam_conv
+     A VA(ICD(36)),VA(ICD(37)),VA(ICD(38)),VA(ICD(39)),VA(ICD(40)),            
+     B VA(ICD(41)),VA(ICD(42)),VA(ICD(43)),VA(ICD(44)),VA(ICD(45)),            
+     C VA(ICD(46)),VA(ICD(47)),VA(ICD(48)),VA(ICD(49)),VA(ICD(50)),            
+     D VA(ICD(51)),VA(ICD(52))                                     )           
+C                                                                              
+C     * DETERMINE CLOUD BASE MASS FLUX.                                        
+C                                                                              
+      DO 180 K=1,LENGATH                                                       
+          QDB(K)=QD(K,MAXG(K))                                                 
+          SDB(K)=SD(K,MAXG(K))                                                 
+        BETAD(K)=MD(K,MAXG(K))                                                 
+        BETAU(K)=MU(K,MAXG(K))                                                 
+  180 CONTINUE                                                                 
+C                                                                              
+C     * CONVERT DETRAINMENT FROM UNITS OF "1/M" TO "1/MB".                     
+C                                                                              
+      DO 185 L=MSG+1,ILEV-1                                                    
+      DO 185 K=1,LENGATH                                                       
+        DU(K,L)=DU(K,L)*(ZFG(K,L)-ZFG(K,L+1))/DP(K,L)                          
+ 185  CONTINUE                                                                 
+C                                                                              
+      DO 188 K=1,LENGATH                                                       
+        DU(K,ILEV)=DU(K,ILEV)*ZFG(K,ILEV)/DP(K,ILEV)                           
+ 188  CONTINUE                                                                 
+C                                                                              
+      CALL CLOSUR5(QG,TG,PG,ZG,SG,TPG,QS,QU,SU,MC,DU,MU,MD,QD,SD,ALPHA,        
+     1             QHAT,SHAT,DP,QSTPG,ZFG,QL,DSUBCLD,MB,QDB,SDB,               
+     2             BETAU,BETAD,CAPEG,TLG,LCLG,LELG,JT,MAXG,ILEV,ILG,           
+     3             1,LENGATH,RGAS,GRAV,CPRES,MSG,CAPELMT,                      
+     4 VA(ICD( 1)),VA(ICD( 2)),VA(ICD( 3)),VA(ICD( 4)),VA(ICD( 5)),            
+     5 VA(ICD( 6)),VA(ICD( 7)),                                                
+     6 VA(ICD(31)),VA(ICD(32)),VA(ICD(33)),VA(ICD(34)),VA(ICD(35)),            
+     7 VA(ICD(36)),VA(ICD(37)),VA(ICD(38)),VA(ICD(39)),VA(ICD(40)),            
+     8 VA(ICD(41)),VA(ICD(42)),VA(ICD(43)),VA(ICD(44)),VA(ICD(45)),            
+     9 VA(ICD(46))                                                     )       
+C                                                                              
+C     * LIMIT CLOUD BASE MASS FLUX TO THEORETICAL UPPER BOUND.                 
+C     * NO DEEP IS DONE FOR PATHOLOGICAL CASE WHERE THE LIFTING                
+C     * CONDENSATION LEVEL IS AT OR ABOVE THE MINIMUM OF HSAT.                 
+C                                                                              
+      DO 190 L=MSG+2,ILEV                                                      
+      DO 190 K=1,LENGATH                                                       
+        IF(MU(K,L).GT.0.)                                       THEN           
+          MB(K)=MIN( MB(K) , DP(K,L)/(2.*DELT*MU(K,L)) )                       
+        ENDIF                                                                  
+        IF(LCLG(K).LE.J0(K))    MB(K)=0.                                       
+  190 CONTINUE                                                                 
+                                                                               
+      DO 200 L=MSG+1,ILEV                                                      
+      DO 200 K=1,LENGATH                                                       
+        MU(K,L)=MU(K,L)*MB(K)                                                  
+        MD(K,L)=MD(K,L)*MB(K)                                                  
+        MC(K,L)=MC(K,L)*MB(K)                                                  
+        DU(K,L)=DU(K,L)*MB(K)                                                  
+        EU(K,L)=EU(K,L)*MB(K)                                                  
+        ED(K,L)=ED(K,L)*MB(K)                                                  
+        DUDT(K,L)=0.                                                           
+        DVDT(K,L)=0.                                                           
+  200 CONTINUE                                                                 
+                                                                               
+      DO 300 K=1,LENGATH                                                       
+        BETAU(K)=BETAU(K)*MB(K)                                                
+        BETAD(K)=BETAD(K)*MB(K)                                                
+  300 CONTINUE                                                                 
+C                                                                              
+C     * COMPUTE TEMPERATURE AND MOISTURE CHANGES DUE TO CONVECTION.            
+C                                                                              
+      CALL Q1Q25X(DQDT,DSDT,QG,SG,QS,QU,SU,MC,DU,ALPHA,QHAT,SHAT,DP,           
+!     1           MU,MD,SD,QD,QL,                                               
+     1          MU,MD,SD,QD,QL,DQLDTG,                             !cam_conv
+     2           DXDT,XG,XU,XD,XHAT,ITRPHS,NTRAC,ITRAC,                        
+     3           DSUBCLD,QDB,SDB,BETAU,BETAD,MB,LCLG,JT,MAXG,                  
+     4 VA(ICD( 1)),VA(ICD( 2)),VA(ICD( 3)),VA(ICD( 4)),VA(ICD(31)),            
+     5 VA(ICD(70)),VA(ICD(71)),                                                
+     6          2.*DELT,ILEV,ILG,1,LENGATH,CPRES,MSG)                          
+C                                                                              
+C     * COMPUTE MOMENTUM CHANGES DUE TO CONVECTION, IF DESIRED (I.E            
+C     * IF LOGICAL SWITCH SET).                                                
+C                                                                              
+      IF(MOMENTM)                                                   THEN       
+        CALL MOMENT(DUDT,DVDT,DU,ALPHA,DP,ED,EU,MC,MD,MU,                      
+     1              PG,QD,QU,QHAT,SD,SU,SHAT,TG,UG,VG,ZG,ZFG,                  
+     2              DSUBCLD,MAXG,JD,JT,                                        
+     3              MSG,2.*DELT,GRAV,CPRES,RGAS,ILEV,1,LENGATH,ILG,JLAT,       
+     4 VA(ICD( 1)),VA(ICD( 2)),VA(ICD( 3)),VA(ICD( 4)),VA(ICD( 5)),            
+     5 VA(ICD( 6)),VA(ICD( 7)),VA(ICD( 8)),VA(ICD( 9)),VA(ICD(10)),            
+     6 VA(ICD(11)),VA(ICD(12)),VA(ICD(13)),VA(ICD(14)),VA(ICD(15)),            
+     7 VA(ICD(16)),VA(ICD(17)),VA(ICD(18)),VA(ICD(19)),VA(ICD(20)),            
+     8 VA(ICD(21)),VA(ICD(22)),VA(ICD(23)),VA(ICD(24)),VA(ICD(25)),            
+     9 VA(ICD(26)),VA(ICD(27)),VA(ICD(28)),VA(ICD(29)),                        
+     A VA(ICD(31)),VA(ICD(32)),VA(ICD(33)),VA(ICD(34)),VA(ICD(35)),            
+     B VA(ICD(36)),VA(ICD(37)),                                                
+     C VA(ICD(61)),VA(ICD(62)),VA(ICD(63)),VA(ICD(64)),VA(ICD(65)),            
+     D VA(ICD(66)),VA(ICD(67)),VA(ICD(68)),VA(ICD(69))            )            
+      ENDIF                                                                    
+C                                                                              
+C     * PRINT OUT QUANTITIES.                                                  
+C                                                                              
+      IF(JLAT.EQ.JLATPR)                                       THEN            
+           CALL IPNTROW(IDEEP,'IDEEP','INSIDE CONV5',1,1,                      
+     1                  ILG,1,LENGATH,JLAT)                                    
+           CALL PRNTROW(CAPEG,'CAPE','INSIDE CONV5',1,1,                       
+     1                  ILG,1,LENGATH,JLAT)                                    
+           CALL PRNTROW(MB,'MB','INSIDE CONV5',1,1,                            
+     1                  ILG,1,LENGATH,JLAT)                                    
+           CALL IPNTROW(LONG,'LON','INSIDE CONV5',1,1,                         
+     1                  ILG,1,LENGATH,JLAT)                                    
+           CALL IPNTROW(MAXG,'MAX','INSIDE CONV5',1,1,                         
+     1                  ILG,1,LENGATH,JLAT)                                    
+           CALL IPNTROW(LCLG,'LCL','INSIDE CONV5',1,1,                         
+     1                  ILG,1,LENGATH,JLAT)                                    
+           CALL IPNTROW(LELG,'LEL','INSIDE CONV5',1,1,                         
+     1                  ILG,1,LENGATH,JLAT)                                    
+           CALL IPNTROW(JT,'JT','INSIDE CONV5',1,1,                            
+     1                  ILG,1,LENGATH,JLAT)                                    
+           CALL IPNTROW(J0,'J0','INSIDE CONV5',1,1,                            
+     1                  ILG,1,LENGATH,JLAT)                                    
+           CALL IPNTROW(JD,'JD','INSIDE CONV5',1,1,                            
+     1                  ILG,1,LENGATH,JLAT)                                    
+           CALL PRNTROW(QG,'Q','INSIDE CONV5',ILEV,1,                          
+     1                  ILG,1,LENGATH,JLAT)                                    
+           CALL PRNTROW(TG,'T','INSIDE CONV5',ILEV,1,                          
+     1                  ILG,1,LENGATH,JLAT)                                    
+           CALL PRNTROW(PG,'P','INSIDE CONV5',ILEV,1,                          
+     1                  ILG,1,LENGATH,JLAT)                                    
+           CALL PRNTROW(ZG,'Z','INSIDE CONV5',ILEV,1,                          
+     1                  ILG,1,LENGATH,JLAT)                                    
+           CALL PRNTROW(ZFG,'ZF','INSIDE CONV5',ILEV,1,                        
+     1                  ILG,1,LENGATH,JLAT)                                    
+           CALL PRNTROW(UG,'U','INSIDE CONV5',ILEV,1,                          
+     1                  ILG,1,LENGATH,JLAT)                                    
+           CALL PRNTROW(VG,'V','INSIDE CONV5',ILEV,1,                          
+     1                  ILG,1,LENGATH,JLAT)                                    
+           CALL PRNTROW(TPG,'TP','INSIDE CONV5',ILEV,1,                        
+     1                  ILG,1,LENGATH,JLAT)                                    
+           CALL PRNTROW(QSTPG,'QSTP','INSIDE CONV5',ILEV,1,                    
+     1                  ILG,1,LENGATH,JLAT)                                    
+           CALL PRNTROW(MU,'MU','INSIDE CONV5',ILEV,1,                         
+     1                  ILG,1,LENGATH,JLAT)                                    
+           CALL PRNTROW(EU,'EU','INSIDE CONV5',ILEV,1,                         
+     1                  ILG,1,LENGATH,JLAT)                                    
+           CALL PRNTROW(DU,'DU','INSIDE CONV5',ILEV,1,                         
+     1                  ILG,1,LENGATH,JLAT)                                    
+           CALL PRNTROW(MD,'MD','INSIDE CONV5',ILEV,1,                         
+     1                  ILG,1,LENGATH,JLAT)                                    
+           CALL PRNTROW(ED,'ED','INSIDE CONV5',ILEV,1,                         
+     1                  ILG,1,LENGATH,JLAT)                                    
+           CALL PRNTROW(SD,'SD','INSIDE CONV5',ILEV,1,                         
+     1                  ILG,1,LENGATH,JLAT)                                    
+           CALL PRNTROW(QD,'QD','INSIDE CONV5',ILEV,1,                         
+     1                  ILG,1,LENGATH,JLAT)                                    
+           CALL PRNTROW(QU,'QU','INSIDE CONV5',ILEV,1,                         
+     1                  ILG,1,LENGATH,JLAT)                                    
+           CALL PRNTROW(SU,'SU','INSIDE CONV5',ILEV,1,                         
+     1                  ILG,1,LENGATH,JLAT)                                    
+           CALL PRNTROW(SG,'S','INSIDE CONV5',ILEV,1,                          
+     1                  ILG,1,LENGATH,JLAT)                                    
+           CALL PRNTROW(QL,'QL','INSIDE CONV5',ILEV,1,                         
+     1                  ILG,1,LENGATH,JLAT)                                    
+           CALL PRNTROW(QS,'QS','INSIDE CONV5',ILEV,1,                         
+     1                  ILG,1,LENGATH,JLAT)                                    
+           CALL PRNTROW(HMN,'HMN','INSIDE CONV5',ILEV,1,                       
+     1                  ILG,1,LENGATH,JLAT)                                    
+           CALL PRNTROW(HSAT,'HSAT','INSIDE CONV5',ILEV,1,                     
+     1                  ILG,1,LENGATH,JLAT)                                    
+           CALL PRNTROW(MC,'MC','INSIDE CONV5',ILEV,1,                         
+     1                  ILG,1,LENGATH,JLAT)                                    
+           CALL PRNTROW(QHAT,'QHAT','INSIDE CONV5',ILEV,1,                     
+     1                  ILG,1,LENGATH,JLAT)                                    
+           CALL PRNTROW(SHAT,'SHAT','INSIDE CONV5',ILEV,1,                     
+     1                  ILG,1,LENGATH,JLAT)                                    
+           CALL PRNTROW(DP,'DP','INSIDE CONV5',ILEV,1,                         
+     1                  ILG,1,LENGATH,JLAT)                                    
+           CALL PRNTROW(DSUBCLD,'DSUBCLD','INSIDE CONV5',1,1,                  
+     1                  ILG,1,LENGATH,JLAT)                                    
+           CALL PRNTROW(QDB,'QDB','INSIDE CONV5',1,1,                          
+     1                  ILG,1,LENGATH,JLAT)                                    
+           CALL PRNTROW(SDB,'SDB','INSIDE CONV5',1,1,                          
+     1                  ILG,1,LENGATH,JLAT)                                    
+           CALL PRNTROW(BETAU,'BETAU','INSIDE CONV5',1,1,                      
+     1                  ILG,1,LENGATH,JLAT)                                    
+           CALL PRNTROW(BETAD,'BETAD','INSIDE CONV5',1,1,                      
+     1                  ILG,1,LENGATH,JLAT)                                    
+           CALL PRNTROW(DQDT,'DQDT','INSIDE CONV5',ILEV,1,                     
+     1                  ILG,1,LENGATH,JLAT)                                    
+           CALL PRNTROW(DSDT,'DSDT','INSIDE CONV5',ILEV,1,                     
+     1                  ILG,1,LENGATH,JLAT)                                    
+           CALL PRNTROW(DUDT,'DUDT','INSIDE CONV5',ILEV,1,                     
+     1                  ILG,1,LENGATH,JLAT)                                    
+           CALL PRNTROW(DVDT,'DVDT','INSIDE CONV5',ILEV,1,                     
+     1                  ILG,1,LENGATH,JLAT)                                    
+           IF(ITRAC.NE.0) THEN                                                 
+              DO N=1,NTRAC                                                     
+                IF(ITRPHS(N).GT.0)                            THEN             
+                  PRINT *,'DXDT FOR TRACER NO.: ',N                            
+                  CALL PRNTROW(DXDT(1,1,N),'DXDT','INSIDE CONV5',ILEV,1,       
+     1                         ILG,1,LENGATH,JLAT)                             
+                ENDIF                                                          
+              ENDDO                                                            
+           ENDIF                                                               
+                                                                               
+      ENDIF                                                                    
+C                                                                   ! knut
+C    * CALCULATE CLOUD COVER AND LWC                                ! knut
+C
+      DO 445 L=MSG+1,ILEV                                           ! knut
+      DO 445 K=1,LENGATH                                            ! knut
+C                                                                   ! knut
+C---    liquid cloud water content                                  ! knut
+        ZMLWC(IDEEP(K),L)=AMAX1(QL(K,L),0.0)                        ! knut
+C                                                                   ! knut
+C---    cloud cover                                                 ! knut
+        ATEMP = MU(K,L)*(100.*3600./GRAV)                           ! knut
+        IF ( ATEMP .GE. 0.01 ) THEN                                 ! knut
+           ATEMP = LOG10 (ATEMP)                                    ! knut
+           IF ( P(IDEEP(K),L) .LE. 550. ) THEN                      ! knut
+              CLDCV(IDEEP(K),L) = 0.0708 + 0.0941 * ATEMP           ! knut
+     1                          + 0.0233 * ATEMP**2                 ! knut
+           ELSE IF ( P(IDEEP(K),L) .LE. 800. ) THEN                 ! knut
+              CLDCV(IDEEP(K),L) = 0.0722 + 0.0760 * ATEMP           ! knut
+     1                          + 0.0254 * ATEMP**2                 ! knut
+           ELSE                                                     ! knut
+              CLDCV(IDEEP(K),L) = 0.0337 + 0.0453 * ATEMP           ! knut
+     1                          + 0.0237 * ATEMP**2                 ! knut
+           END IF                                                   ! knut
+           CLDCV(IDEEP(K),L)=MAX(0.,MIN(.25,CLDCV(IDEEP(K),L)))     ! knut
+        END IF                                                      ! knut
+ 445  CONTINUE
+C                                                                              
+C    * GATHER BACK TEMPERATURE AND MIXING RATIO.                               
+C                                                                              
+      DO 450 L=MSG+1,ILEV                                                      
+      DO 450 K=1,LENGATH                                                       
+c        Q(IDEEP(K),L) = Q(IDEEP(K),L) + 2.*DELT*DQDT(K,L)                      
+c        T(IDEEP(K),L) = T(IDEEP(K),L) + 2.*DELT*DSDT(K,L)                      
+c        U(IDEEP(K),L) = U(IDEEP(K),L) + 2.*DELT*DUDT(K,L)                      
+c        V(IDEEP(K),L) = V(IDEEP(K),L) + 2.*DELT*DVDT(K,L)                      
+        DQLDT(IDEEP(K),L)=DQLDTG(K,L)                            !cam_conv
+        UTG(IDEEP(K),L)=UTG(IDEEP(K),L)+DUDT(K,L)                              
+        VTG(IDEEP(K),L)=VTG(IDEEP(K),L)+DVDT(K,L)                              
+  450 CONTINUE                                                                 
+C                                                                              
+      IF(ITRAC.NE.0) THEN                                                      
+        DO N=1,NTRAC                                                           
+          IF(ITRPHS(N).GT.0)                                 THEN              
+            DO 460 L=MSG+1,ILEV                                                
+            DO 460 K=1,LENGATH                                                 
+              X(IDEEP(K),L,N) = X(IDEEP(K),L,N) + 2.*DELT*DXDT(K,L,N)          
+  460       CONTINUE                                                           
+          ENDIF                                                                
+        ENDDO                                                                  
+      ENDIF                                                                    
+C                                                                              
+      DO 470 K=1,LENGATH                                                       
+        TCV(IDEEP(K)) = FLOAT(JT(K))                                           
+  470 CONTINUE                                                                 
+C                                                                              
+C    * CONVERT BACK TO SPECIFIC HUMIDITY FROM MIXING RATIO.                    
+C    * TAKE INTO ACCOUNT ANY MOISTURE ADDED TO ENSURE POSITIVENESS             
+C    * OF SPECIFIC HUMIDITY AT START OF ROUTINE.                               
+C                                                                              
+      DO 500 L=MSG+1,ILEV                                                      
+      DO 500 IL=IL1,IL2                                                        
+        IF(CAPE(IL) .GT. CAPELMT)     THEN                                     
+c          QH(IL,L) = Q(IL,L)/(1.+Q(IL,L))                                      
+c          QH(IL,L) = QH(IL,L) - MAX( (QMIN-QH0(IL,L)) , 0. )                   
+        ENDIF                                                                  
+  500 CONTINUE                                                                 
+C                                                                              
+      IF(ITRAC.NE.0) THEN                                                      
+        DO N=1,NTRAC                                                           
+          IF(ITRPHS(N).GT.0)                                 THEN              
+            DO 550 L=MSG+1,ILEV                                                
+            DO 550 IL=IL1,IL2                                                  
+CP              XH(IL,L+1,N) = X(IL,L,N)                                         
+              XH(IL,L+1,N) = AMAX1(X(IL,L,N),0.0)           !cam_conv
+  550       CONTINUE                                                           
+          ENDIF                                                                
+        ENDDO                                                                  
+      ENDIF                                                                    
+C                                                                              
+C     * DETERMINE CHANGE IN COLUMN STORAGE DUE TO DEEP CONVECTION.             
+C                                                                              
+      DO 600 L=MSG+1,ILEV                                                      
+      DO 600 IL=IL1,IL2                                                        
+        SUMQ(IL)  = SUMQ(IL) - DEL(IL,L)*(QH(IL,L)-QH0(IL,L))                  
+C
+C   Accumulated precip. at each layer. PCP(*,1) is ground pricip.
+C
+        PCP(IL,L)  = PCP(IL,L) + PCPDH(IL) * MAX(SUMQ(IL),0.)
+        PCP(IL,L)=CVMGT(0.,PCP(IL,L),PCP(IL,L).LT.1.E-15)                   !SLO
+  600 CONTINUE                                                                 
+C                                                                              
+C     * OBTAIN FINAL PRECIPITATION RATE.                                       
+C                                                                              
+!      DO 700 IL=IL1,IL2                                                        
+!        PCP(IL)  = PCP(IL) + PCPDH(IL) * MAX(SUMQ(IL),0.)                      
+!  700 CONTINUE                                                                 
+C                                                                              
+C     * CALCULATE CONSERVATION OF QUANTITIES.                                  
+C                                                                              
+      IF(JLAT.EQ.JLATPR)                                       THEN            
+        DO 800 L=MSG+1,ILEV                                                    
+        DO 800 K=1,LENGATH                                                     
+C         RL (K)   = (2.501-.00237*(T(IDEEP(K),L)-TFREEZ))*1.E6                
+          RL (K)   = 2.501E6                                                   
+          SUMDQ(K) = SUMDQ(K) + 2.*DELT*(RL(K)/CPRES)*DEL(IDEEP(K),L)*         
+     1                          DQDT(K,L)                                      
+          SUMDT(K) = SUMDT(K) + 2.*DELT*DEL(IDEEP(K),L)*DSDT(K,L)              
+  800   CONTINUE                                                               
+                                                                               
+        DO 900 K=1,LENGATH                                                     
+          SUMDE(K) = SUMDT(K) + SUMDQ(K)                                       
+  900   CONTINUE                                                               
+                                                                               
+        CALL PRNTROW(SUMDE,'SUMDE','INSIDE CONV5',1,1,                         
+     1               ILG,1,LENGATH,JLAT)                                       
+        CALL PRNTROW(SUMDT,'SUMDT','INSIDE CONV5',1,1,                         
+     1               ILG,1,LENGATH,JLAT)                                       
+        CALL PRNTROW(SUMDQ,'SUMDQ','INSIDE CONV5',1,1,                         
+     1               ILG,1,LENGATH,JLAT)                                       
+C                                                                              
+        IF(ITRAC.NE.0)        THEN                                             
+C                                                                              
+C         * DETERMINE ACCURACY OF CONSERVATION.                                
+C                                                                              
+          DO N=1,NTRAC                                                         
+            IF(ITRPHS(N).GT.0)                                 THEN            
+              DO 925 L=1,ILEV                                                  
+              DO 925 K=1,LENGATH                                               
+               SUMDX(K,N)=SUMDX(K,N)+2.*DELT*DEL(IDEEP(K),L)*DXDT(K,L,N)       
+  925         CONTINUE                                                         
+            ENDIF                                                              
+          ENDDO                                                                
+C                                                                              
+          DO N=1,NTRAC                                                         
+            IF(ITRPHS(N).GT.0)                                 THEN            
+              DO 950 K=1,LENGATH                                               
+                  SUMDX2(N)=SUMDX2(N)+SUMDX(K,N)**2                            
+  950         CONTINUE                                                         
+              PRINT *, '0N,SUMDX2 = ',N,SUMDX2(N)                              
+            ENDIF                                                              
+          ENDDO                                                                
+        ENDIF                                                                  
+                                                                               
+      ENDIF                                                                    
+      RETURN                                                                   
+      END                                                                      

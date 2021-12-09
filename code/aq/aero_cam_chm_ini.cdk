@@ -1,0 +1,198 @@
+!
+!  start: aero_cam_chm_ini.cdk
+!
+! *----------------------------------------------------------------------
+! * AEROSOL TRACERS for CAM
+! *----------------------------------------------------------------------
+!
+!--seal salt
+!
+     call chm_gesdict (n, nk, sslt01,   'VN=SS01;  ON=SS01;  VD=SS01-sea salt - bin 01         ;VS=slb  ; VB=d1')
+     call chm_gesdict (n, nk, sslt02,   'VN=SS02;  ON=SS02;  VD=SS02-sea salt - bin 02         ;VS=slb  ; VB=d1')
+     call chm_gesdict (n, nk, sslt03,   'VN=SS03;  ON=SS03;  VD=SS03-sea salt - bin 03         ;VS=slb  ; VB=d1')
+     call chm_gesdict (n, nk, sslt04,   'VN=SS04;  ON=SS04;  VD=SS04-sea salt - bin 04         ;VS=slb  ; VB=d1')
+     call chm_gesdict (n, nk, sslt05,   'VN=SS05;  ON=SS05;  VD=SS05-sea salt - bin 05         ;VS=slb  ; VB=d1')
+     call chm_gesdict (n, nk, sslt06,   'VN=SS06;  ON=SS06;  VD=SS06-sea salt - bin 06         ;VS=slb  ; VB=d1')
+     call chm_gesdict (n, nk, sslt07,   'VN=SS07;  ON=SS07;  VD=SS07-sea salt - bin 07         ;VS=slb  ; VB=d1')
+     call chm_gesdict (n, nk, sslt08,   'VN=SS08;  ON=SS08;  VD=SS08-sea salt - bin 08         ;VS=slb  ; VB=d1')
+     call chm_gesdict (n, nk, sslt09,   'VN=SS09;  ON=SS09;  VD=SS09-sea salt - bin 09         ;VS=slb  ; VB=d1')
+     call chm_gesdict (n, nk, sslt10,   'VN=SS10;  ON=SS10;  VD=SS10-sea salt - bin 10         ;VS=slb  ; VB=d1')
+     call chm_gesdict (n, nk, sslt11,   'VN=SS11;  ON=SS11;  VD=SS11-sea salt - bin 11         ;VS=slb  ; VB=d1')
+     call chm_gesdict (n, nk, sslt12,   'VN=SS12;  ON=SS12;  VD=SS12-sea salt - bin 12         ;VS=slb  ; VB=d1')
+!
+!--sulphates
+!
+     call chm_gesdict (n, nk, sf01,   'VN=SF01;  ON=SF01;  VD=SF01-sulphate - bin 01         ;VS=slb  ; VB=d1')
+     call chm_gesdict (n, nk, sf02,   'VN=SF02;  ON=SF02;  VD=SF02-sulphate - bin 02         ;VS=slb  ; VB=d1')
+     call chm_gesdict (n, nk, sf03,   'VN=SF03;  ON=SF03;  VD=SF03-sulphate - bin 03         ;VS=slb  ; VB=d1')
+     call chm_gesdict (n, nk, sf04,   'VN=SF04;  ON=SF04;  VD=SF04-sulphate - bin 04         ;VS=slb  ; VB=d1')
+     call chm_gesdict (n, nk, sf05,   'VN=SF05;  ON=SF05;  VD=SF05-sulphate - bin 05         ;VS=slb  ; VB=d1')
+     call chm_gesdict (n, nk, sf06,   'VN=SF06;  ON=SF06;  VD=SF06-sulphate - bin 06         ;VS=slb  ; VB=d1')
+     call chm_gesdict (n, nk, sf07,   'VN=SF07;  ON=SF07;  VD=SF07-sulphate - bin 07         ;VS=slb  ; VB=d1')
+     call chm_gesdict (n, nk, sf08,   'VN=SF08;  ON=SF08;  VD=SF08-sulphate - bin 08         ;VS=slb  ; VB=d1')
+     call chm_gesdict (n, nk, sf09,   'VN=SF09;  ON=SF09;  VD=SF09-sulphate - bin 09         ;VS=slb  ; VB=d1')
+     call chm_gesdict (n, nk, sf10,   'VN=SF10;  ON=SF10;  VD=SF10-sulphate - bin 10         ;VS=slb  ; VB=d1')
+     call chm_gesdict (n, nk, sf11,   'VN=SF11;  ON=SF11;  VD=SF11-sulphate - bin 11         ;VS=slb  ; VB=d1')
+     call chm_gesdict (n, nk, sf12,   'VN=SF12;  ON=SF12;  VD=SF12-sulphate - bin 12         ;VS=slb  ; VB=d1')
+!
+!--black carbon
+!
+     call chm_gesdict (n, nk, bc01,   'VN=BC01;  ON=BC01;  VD=BC01-black carbon - bin 01         ;VS=slb  ; VB=d1')
+     call chm_gesdict (n, nk, bc02,   'VN=BC02;  ON=BC02;  VD=BC02-black carbon - bin 02         ;VS=slb  ; VB=d1')
+     call chm_gesdict (n, nk, bc03,   'VN=BC03;  ON=BC03;  VD=BC03-black carbon - bin 03         ;VS=slb  ; VB=d1')
+     call chm_gesdict (n, nk, bc04,   'VN=BC04;  ON=BC04;  VD=BC04-black carbon - bin 04         ;VS=slb  ; VB=d1')
+     call chm_gesdict (n, nk, bc05,   'VN=BC05;  ON=BC05;  VD=BC05-black carbon - bin 05         ;VS=slb  ; VB=d1')
+     call chm_gesdict (n, nk, bc06,   'VN=BC06;  ON=BC06;  VD=BC06-black carbon - bin 06         ;VS=slb  ; VB=d1')
+     call chm_gesdict (n, nk, bc07,   'VN=BC07;  ON=BC07;  VD=BC07-black carbon - bin 07         ;VS=slb  ; VB=d1')
+     call chm_gesdict (n, nk, bc08,   'VN=BC08;  ON=BC08;  VD=BC08-black carbon - bin 08         ;VS=slb  ; VB=d1')
+     call chm_gesdict (n, nk, bc09,   'VN=BC09;  ON=BC09;  VD=BC09-black carbon - bin 09         ;VS=slb  ; VB=d1')
+     call chm_gesdict (n, nk, bc10,   'VN=BC10;  ON=BC10;  VD=BC10-black carbon - bin 10         ;VS=slb  ; VB=d1')
+     call chm_gesdict (n, nk, bc11,   'VN=BC11;  ON=BC11;  VD=BC11-black carbon - bin 11         ;VS=slb  ; VB=d1')
+     call chm_gesdict (n, nk, bc12,   'VN=BC12;  ON=BC12;  VD=BC12-black carbon - bin 12         ;VS=slb  ; VB=d1')
+!
+!--organic carbon 
+!
+     call chm_gesdict (n, nk, oc01,   'VN=OC01;  ON=OC01;  VD=OC01-organic carbon - bin 01         ;VS=slb  ; VB=d1')
+     call chm_gesdict (n, nk, oc02,   'VN=OC02;  ON=OC02;  VD=OC02-organic carbon - bin 02         ;VS=slb  ; VB=d1')
+     call chm_gesdict (n, nk, oc03,   'VN=OC03;  ON=OC03;  VD=OC03-organic carbon - bin 03         ;VS=slb  ; VB=d1')
+     call chm_gesdict (n, nk, oc04,   'VN=OC04;  ON=OC04;  VD=OC04-organic carbon - bin 04         ;VS=slb  ; VB=d1')
+     call chm_gesdict (n, nk, oc05,   'VN=OC05;  ON=OC05;  VD=OC05-organic carbon - bin 05         ;VS=slb  ; VB=d1')
+     call chm_gesdict (n, nk, oc06,   'VN=OC06;  ON=OC06;  VD=OC06-organic carbon - bin 06         ;VS=slb  ; VB=d1')
+     call chm_gesdict (n, nk, oc07,   'VN=OC07;  ON=OC07;  VD=OC07-organic carbon - bin 07         ;VS=slb  ; VB=d1')
+     call chm_gesdict (n, nk, oc08,   'VN=OC08;  ON=OC08;  VD=OC08-organic carbon - bin 08         ;VS=slb  ; VB=d1')
+     call chm_gesdict (n, nk, oc09,   'VN=OC09;  ON=OC09;  VD=OC09-organic carbon - bin 09         ;VS=slb  ; VB=d1')
+     call chm_gesdict (n, nk, oc10,   'VN=OC10;  ON=OC10;  VD=OC10-organic carbon - bin 10         ;VS=slb  ; VB=d1')
+     call chm_gesdict (n, nk, oc11,   'VN=OC11;  ON=OC11;  VD=OC11-organic carbon - bin 11         ;VS=slb  ; VB=d1')
+     call chm_gesdict (n, nk, oc12,   'VN=OC12;  ON=OC12;  VD=OC12-organic carbon - bin 12         ;VS=slb  ; VB=d1')
+!
+!-- dust
+!
+     call chm_gesdict (n, nk, sd01,   'VN=SD01;  ON=SD01;  VD=SD01-dust - bin 01         ;VS=slb  ; VB=d1')
+     call chm_gesdict (n, nk, sd02,   'VN=SD02;  ON=SD02;  VD=SD02-dust - bin 02         ;VS=slb  ; VB=d1')
+     call chm_gesdict (n, nk, sd03,   'VN=SD03;  ON=SD03;  VD=SD03-dust - bin 03         ;VS=slb  ; VB=d1')
+     call chm_gesdict (n, nk, sd04,   'VN=SD04;  ON=SD04;  VD=SD04-dust - bin 04         ;VS=slb  ; VB=d1')
+     call chm_gesdict (n, nk, sd05,   'VN=SD05;  ON=SD05;  VD=SD05-dust - bin 05         ;VS=slb  ; VB=d1')
+     call chm_gesdict (n, nk, sd06,   'VN=SD06;  ON=SD06;  VD=SD06-dust - bin 06         ;VS=slb  ; VB=d1')
+     call chm_gesdict (n, nk, sd07,   'VN=SD07;  ON=SD07;  VD=SD07-dust - bin 07         ;VS=slb  ; VB=d1')
+     call chm_gesdict (n, nk, sd08,   'VN=SD08;  ON=SD08;  VD=SD08-dust - bin 08         ;VS=slb  ; VB=d1')
+     call chm_gesdict (n, nk, sd09,   'VN=SD09;  ON=SD09;  VD=SD09-dust - bin 09         ;VS=slb  ; VB=d1')
+     call chm_gesdict (n, nk, sd10,   'VN=SD10;  ON=SD10;  VD=SD10-dust - bin 10         ;VS=slb  ; VB=d1')
+     call chm_gesdict (n, nk, sd11,   'VN=SD11;  ON=SD11;  VD=SD11-dust - bin 11         ;VS=slb  ; VB=d1')
+     call chm_gesdict (n, nk, sd12,   'VN=SD12;  ON=SD12;  VD=SD12-dust - bin 12         ;VS=slb  ; VB=d1')
+!
+     call chm_gesdict (n, nk, adms,   'VN=ADMS;  ON=ADMS;  VD=ADMS transported         ;VS=slb  ; VB=d1')
+     call chm_gesdict (n, nk, ah2s,   'VN=AH2S;  ON=AH2S;  VD=AH2S transported         ;VS=slb  ; VB=d1')
+!
+     call chm_gesdict (n, nk, anh3,   'VN=ANH3;  ON=ANH3;  VD=ANH3         ;VS=slb  ; VB=p0')  ! check this!!!!
+!
+!-- aero - non-advected stuff .... produced in CAM ... probably can be traded as diagnostics
+!
+     call chm_gesdict (n, nk, aco2,   'VN=ACO2;  ON=ACO2;  VD=ACO2         ;VS=slb  ; VB=p0')
+     call chm_gesdict (n, nk, aso4,   'VN=ASO4;  ON=ASO4;  VD=ASO4         ;VS=slb  ; VB=p0')    ! total SO4
+     call chm_gesdict (n, nk, accn,   'VN=ACCN;  ON=ACCN;  VD=ACCN         ;VS=slb  ; VB=p0')
+     call chm_gesdict (n, nk, alwc,   'VN=ALWC;  ON=ALWC;  VD=ALWC         ;VS=slb  ; VB=p0')
+     call chm_gesdict (n, nk, aiwc,   'VN=AIWC;  ON=AIWC;  VD=AIWC         ;VS=slb  ; VB=p0')
+     call chm_gesdict (n, nk, aclf,   'VN=ACLF;  ON=ACLF;  VD=ACLF         ;VS=slb  ; VB=p0')
+!
+! real diagnostics - summ of each aerosol type + PM2.5 & PM10
+!
+     call chm_gesdict (n, nk, atsf,    'VN=ATSF;   ON=ATSF;   VD=Total aerosol sulf    ;VS=slb  ; VB=p0')
+     call chm_gesdict (n, nk, atss,    'VN=ATSS;   ON=ATSS;   VD=Total seas salt       ;VS=slb  ; VB=p0')
+     call chm_gesdict (n, nk, atbc,    'VN=ATBC;   ON=ATBC;   VD=Total black carbon    ;VS=slb  ; VB=p0')
+     call chm_gesdict (n, nk, atoc,    'VN=ATOC;   ON=ATOC;   VD=Total organic carbon  ;VS=slb  ; VB=p0')
+     call chm_gesdict (n, nk, atsd,    'VN=ATSD;   ON=ATSD;   VD=Total dust            ;VS=slb  ; VB=p0')
+     call chm_gesdict (n, nk, pm25,    'VN=PM25;   ON=PM25;   VD=PM2.5                 ;VS=slb  ; VB=p0')
+     call chm_gesdict (n, nk, pm10,    'VN=PM10;   ON=PM10;   VD=PM10                  ;VS=slb  ; VB=p0')
+     call chm_gesdict (n, nk, pm99,    'VN=PM99;   ON=PM99;   VD=PM99 - all particles  ;VS=slb  ; VB=p0')
+!
+     call chm_gesdict (n, nk, ftsf,    'VN=FTSF;   ON=FTSF;   VD=2.5 aerosol sulf    ;VS=slb  ; VB=p0')
+     call chm_gesdict (n, nk, ftss,    'VN=FTSS;   ON=FTSS;   VD=2.5 seas salt       ;VS=slb  ; VB=p0')
+     call chm_gesdict (n, nk, ftbc,    'VN=FTBC;   ON=FTBC;   VD=2.5 black carbon    ;VS=slb  ; VB=p0')
+     call chm_gesdict (n, nk, ftoc,    'VN=FTOC;   ON=FTOC;   VD=2.5 organic carbon  ;VS=slb  ; VB=p0')
+     call chm_gesdict (n, nk, ftsd,    'VN=FTSD;   ON=FTSD;   VD=2.5 dust            ;VS=slb  ; VB=p0')
+!
+! emissions 
+!
+!-row-problem ==> emissions are loaded into a plane instead of individual rows
+
+
+     call chm_gesdict (n, nk, geia,    'VN=GEIA;   ON=GEIA;   VD=GEIA aerosol emissions        ;VS=slb  ; VB=p0')
+     call chm_gesdict (n, nk, soil,    'VN=SOIL;   ON=SOIL;   VD=SOIL information for emis     ;VS=slb  ; VB=p0')
+!
+! all aerosol species per each BIN - for Spitzbergen	
+!
+     call chm_gesdict (n, nk, bn01,   'VN=BN01;  ON=BN01;  VD=BN01-mixing ratio - bin 01         ;VS=slb  ; VB=p0')
+     call chm_gesdict (n, nk, bn02,   'VN=BN02;  ON=BN02;  VD=BN02-mixing ratio - bin 02         ;VS=slb  ; VB=p0')
+     call chm_gesdict (n, nk, bn03,   'VN=BN03;  ON=BN03;  VD=BN03-mixing ratio - bin 03         ;VS=slb  ; VB=p0')
+     call chm_gesdict (n, nk, bn04,   'VN=BN04;  ON=BN04;  VD=BN04-mixing ratio - bin 04         ;VS=slb  ; VB=p0')
+     call chm_gesdict (n, nk, bn05,   'VN=BN05;  ON=BN05;  VD=BN05-mixing ratio - bin 05         ;VS=slb  ; VB=p0')
+     call chm_gesdict (n, nk, bn06,   'VN=BN06;  ON=BN06;  VD=BN06-mixing ratio - bin 06         ;VS=slb  ; VB=p0')
+     call chm_gesdict (n, nk, bn07,   'VN=BN07;  ON=BN07;  VD=BN07-mixing ratio - bin 07         ;VS=slb  ; VB=p0')
+     call chm_gesdict (n, nk, bn08,   'VN=BN08;  ON=BN08;  VD=BN08-mixing ratio - bin 08         ;VS=slb  ; VB=p0')
+     call chm_gesdict (n, nk, bn09,   'VN=BN09;  ON=BN09;  VD=BN09-mixing ratio - bin 09         ;VS=slb  ; VB=p0')
+     call chm_gesdict (n, nk, bn10,   'VN=BN10;  ON=BN10;  VD=BN10-mixing ratio - bin 10         ;VS=slb  ; VB=p0')
+     call chm_gesdict (n, nk, bn11,   'VN=BN11;  ON=BN11;  VD=BN11-mixing ratio - bin 11         ;VS=slb  ; VB=p0')
+     call chm_gesdict (n, nk, bn12,   'VN=BN12;  ON=BN12;  VD=BN12-mixing ratio - bin 12         ;VS=slb  ; VB=p0')
+!
+!
+! keep this stuff .. to be used when row problems is fixed in the next itf/chm version
+!
+!-row-problem     call chm_gesdict (n, nk, odms,    'VN=ODMS;   ON=ODMS;   VD=Ocean DMS emis kg/m2/season   ;VS=row  ; VB=p0')
+!-row-problem     call chm_gesdict (n, nk, ldms,    'VN=LDMS;   ON=LDMS;   VD=Land  DMS emis kg/m2/season   ;VS=row  ; VB=p0')
+!-row-problem     call chm_gesdict (n, nk, eh2s,    'VN=EH2S;   ON=EH2S;   VD=H2S emis kg/m2/season         ;VS=row  ; VB=p0')
+!
+!-row-problem     call chm_gesdict (n, nk, bc1e,    'VN=BC1E;   ON=BC1E;   VD=BC1E BC emis g/m2/month tropical forest and savanna     ;VS=row  ; VB=p0')
+!-row-problem     call chm_gesdict (n, nk, bc1h,    'VN=BC1H;   ON=BC1H;   VD=BC1H BC1E injection height                              ;VS=row  ; VB=p0')
+!-row-problem     call chm_gesdict (n, nk, bc2e,    'VN=BC2E;   ON=BC2E;   VD=BC2E BC emis g/m2/month agricultural and domestic fires ;VS=row  ; VB=p0')
+!-row-problem     call chm_gesdict (n, nk, bc2h,    'VN=BC2H;   ON=BC2H;   VD=BC2H BC2E injection height                              ;VS=row  ; VB=p0')
+!-row-problem     call chm_gesdict (n, nk, bc3e,    'VN=BC3E;   ON=BC3E;   VD=BC3E BC emis g/m2/month boreal and temperate fires      ;VS=row  ; VB=p0')
+!-row-problem     call chm_gesdict (n, nk, bc3h,    'VN=BC3H;   ON=BC3H;   VD=BC3H BC3E injection height                              ;VS=row  ; VB=p0')
+!-row-problem     call chm_gesdict (n, nk, bc4e,    'VN=BC4E;   ON=BC4E;   VD=BC4E BC emis g/m2/month fossil fuels                    ;VS=row  ; VB=p0')
+!-row-problem     call chm_gesdict (n, nk, bc4h,    'VN=BC4H;   ON=BC4H;   VD=BC4H BC4E injection height                              ;VS=row  ; VB=p0')
+!-row-problem     call chm_gesdict (n, nk, bc5e,    'VN=BC5E;   ON=BC5E;   VD=BC5E BC emis g/m2/month natural sources                 ;VS=row  ; VB=p0')
+!-row-problem     call chm_gesdict (n, nk, bc5h,    'VN=BC5H;   ON=BC5H;   VD=BC5H BC5E injection height                              ;VS=row  ; VB=p0')
+!
+!-row-problem     call chm_gesdict (n, nk, om1e,    'VN=OM1E;   ON=OM1E;   VD=OM1E    OM as BC      ;VS=row  ; VB=p0')
+!-row-problem     call chm_gesdict (n, nk, om1h,    'VN=OM1H;   ON=OM1H;   VD=OM1H                  ;VS=row  ; VB=p0')
+!-row-problem     call chm_gesdict (n, nk, om2e,    'VN=OM2E;   ON=OM2E;   VD=OM2E                  ;VS=row  ; VB=p0')
+!-row-problem     call chm_gesdict (n, nk, om2h,    'VN=OM2H;   ON=OM2H;   VD=OM2H                  ;VS=row  ; VB=p0')
+!-row-problem     call chm_gesdict (n, nk, om3e,    'VN=OM3E;   ON=OM3E;   VD=OM3E                  ;VS=row  ; VB=p0')
+!-row-problem     call chm_gesdict (n, nk, om3h,    'VN=OM3H;   ON=OM3H;   VD=OM3H                  ;VS=row  ; VB=p0')
+!-row-problem     call chm_gesdict (n, nk, om4e,    'VN=OM4E;   ON=OM4E;   VD=OM4E                  ;VS=row  ; VB=p0')
+!-row-problem     call chm_gesdict (n, nk, om4h,    'VN=OM4H;   ON=OM4H;   VD=OM4H                  ;VS=row  ; VB=p0')
+!-row-problem     call chm_gesdict (n, nk, om5e,    'VN=OM5E;   ON=OM5E;   VD=OM5E                  ;VS=row  ; VB=p0')
+!-row-problem     call chm_gesdict (n, nk, om5h,    'VN=OM5H;   ON=OM5H;   VD=OM5H                  ;VS=row  ; VB=p0')
+!
+! soil stuff
+!
+!-row-problem     call chm_gesdict (n, nk, so01,    'VN=SO01;   ON=SO01;   VD=SO01 % of soil type   ;VS=row  ; VB=p0')
+!-row-problem     call chm_gesdict (n, nk, so02,    'VN=SO02;   ON=SO02;   VD=SO02 % of soil type   ;VS=row  ; VB=p0')
+!-row-problem     call chm_gesdict (n, nk, so03,    'VN=SO03;   ON=SO03;   VD=SO03 % of soil type   ;VS=row  ; VB=p0')
+!-row-problem     call chm_gesdict (n, nk, so04,    'VN=SO04;   ON=SO04;   VD=SO04 % of soil type   ;VS=row  ; VB=p0')
+!-row-problem     call chm_gesdict (n, nk, so05,    'VN=SO05;   ON=SO05;   VD=SO05 % of soil type   ;VS=row  ; VB=p0')
+!-row-problem     call chm_gesdict (n, nk, so06,    'VN=SO06;   ON=SO06;   VD=SO06 % of soil type   ;VS=row  ; VB=p0')
+!-row-problem     call chm_gesdict (n, nk, so07,    'VN=SO07;   ON=SO07;   VD=SO07 % of soil type   ;VS=row  ; VB=p0')
+!-row-problem     call chm_gesdict (n, nk, so08,    'VN=SO08;   ON=SO08;   VD=SO08 % of soil type   ;VS=row  ; VB=p0')
+!-row-problem     call chm_gesdict (n, nk, so09,    'VN=SO09;   ON=SO09;   VD=SO09 % of soil type   ;VS=row  ; VB=p0')
+!-row-problem     call chm_gesdict (n, nk, so10,    'VN=SO10;   ON=SO10;   VD=SO10 % of soil type   ;VS=row  ; VB=p0')
+!-row-problem     call chm_gesdict (n, nk, so11,    'VN=SO11;   ON=SO11;   VD=SO11 % of soil type   ;VS=row  ; VB=p0')
+!-row-problem     call chm_gesdict (n, nk, so12,    'VN=SO12;   ON=SO12;   VD=SO12 % of soil type   ;VS=row  ; VB=p0')
+!
+! clay 
+!
+!-row-problem     call chm_gesdict (n, nk, cl01,    'VN=CL01;   ON=CL01;   VD=CL01 % of clay min    ;VS=row  ; VB=p0')
+!-row-problem     call chm_gesdict (n, nk, cl02,    'VN=CL02;   ON=CL02;   VD=CL02 % of clay max    ;VS=row  ; VB=p0')
+!
+! sand
+!
+!-row-problem     call chm_gesdict (n, nk, sa01,    'VN=SA01;   ON=SA01;   VD=SA01                  ;VS=row  ; VB=p0')
+!-row-problem     call chm_gesdict (n, nk, sa02,    'VN=SA02;   ON=SA02;   VD=SA02                  ;VS=row  ; VB=p0')
+!-row-problem     call chm_gesdict (n, nk, sa03,    'VN=SA03;   ON=SA03;   VD=SA03                  ;VS=row  ; VB=p0')
+!-row-problem     call chm_gesdict (n, nk, sa04,    'VN=SA04;   ON=SA04;   VD=SA04                  ;VS=row  ; VB=p0')
+!-row-problem     call chm_gesdict (n, nk, sa05,    'VN=SA05;   ON=SA05;   VD=SA05                  ;VS=row  ; VB=p0')
+!-row-problem     call chm_gesdict (n, nk, sa06,    'VN=SA06;   ON=SA06;   VD=SA06                  ;VS=row  ; VB=p0')
+
+! optical stuff goes here !!
+!
+
+!  end: aero_cam_chm_ini.cdk

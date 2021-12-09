@@ -1,0 +1,240 @@
+!-----------------------------------------------------------------------------------------
+      subroutine aero_read_emis_geia(chm_busper3D,chm_bper_len,imonth)
+!-----------------------------------------------------------------------------------------
+!
+!  J2 modifications 2020-07-26
+!
+#include <model_macros_f.h>
+#include "impnone.cdk"
+#include "chm_ptopo_grid.cdk"
+#include "cc_nml_vars.cdk"
+#include "aero_emis_order_geia_1.cdk"
+#include "aero_emis_order_geia_2.cdk"
+#include "ac_lun.cdk"
+!
+      integer chm_bper_len,imonth
+      real chm_busper3D(chm_bper_len)
+ 
+      character *4 nmvr
+
+!--------------------------------------- old info -------------------------
+!
+!AUTHOR    Lori Neary   Oct 2002  (based on aq_get_luc -plummer)
+!
+!REVISIONS Ping Huang   Apr 2004  Modified for reading in all GEIA emissions data
+!                                 the units for any emission kept as is
+!                                 Getting soiltexture, clay and sand classifi-
+!                                 cation data
+!          Lori Neary  June 2005  fixed to use glbdist 
+!
+! these emissions are from Sunling Gong based on GEIA
+! the names of the species were changed and season/month put into ip3
+! the units for SO4 is MT/m^2/season
+! convert to kg/m^2/s
+!--------------------------------------- old info -------------------------
+!
+      integer iclose,iopen,lun1
+      integer fnom,fstouv,fstfrm
+      integer season,isoil_file,ism
+
+      real, dimension(:,:,:),allocatable :: glob_emis2
+      allocate(glob_emis2(chm_G_ni,  chm_G_nj, chm_l_nk))
+!
+!-----------------------------------------------------------------------------------------
+      lun1=44
+!
+      if(Lun_out.gt.0) write(*,*)'READING IN AERO EMISSIONS from:',aero_emis_file_S
+!
+      iopen=fnom(lun1,aero_emis_file_S,'RND+R/O',0)
+      iopen=fstouv(lun1,'RND')
+!
+! monthly emissions: ODMS
+! seasonal emissions: SO4L,SO4H,LDMS,H2S
+! season 1: DJF
+! season 2: MAM
+! season 3: JJA
+! season 4: SON
+
+       if ((imonth.eq.12).or.(imonth.eq. 1).or.(imonth.eq. 2)) season = 1 
+       if ((imonth.eq. 3).or.(imonth.eq. 4).or.(imonth.eq. 5)) season = 2 
+       if ((imonth.eq. 6).or.(imonth.eq. 7).or.(imonth.eq. 8)) season = 3 
+       if ((imonth.eq. 9).or.(imonth.eq.10).or.(imonth.eq.11)) season = 4 
+
+       if(Lun_out.gt.0) write(*,*)'SEASON=',season
+!
+!----------SOx comes from gas emissions
+! so4 low
+! so4 high
+! so2 low
+! so2 high
+!-------------------------------------
+!
+      glob_emis2=0.0
+!
+      call aero_read_1(glob_emis2,chm_G_ni,chm_G_nj,chm_l_nk,lun1,1,NAME0(imonth),kpos_ODMS)  ! monthly
+!
+      ism=3*(season-1)+1
+      call aero_read_1(glob_emis2,chm_G_ni,chm_G_nj,chm_l_nk,lun1,1,NAME1(ISM+2) ,kpos_LDMS)  ! seasonal
+      call aero_read_1(glob_emis2,chm_G_ni,chm_G_nj,chm_l_nk,lun1,1,NAME1(ISM+1) ,kpos_EH2S)  ! seasonal
+!
+
+!-j2   call aero_read_1(glob_emis2,chm_G_ni,chm_G_nj,chm_l_nk,lun1,1,NAME4(imonth),kpos_BC1E)  ! monthly
+!      call aero_read_1(glob_emis2,chm_G_ni,chm_G_nj,chm_l_nk,lun1,1,NAME4(13),    kpos_BC1H)
+!      call aero_read_1(glob_emis2,chm_G_ni,chm_G_nj,chm_l_nk,lun1,2,NAME4(imonth),kpos_BC2E)
+!      call aero_read_1(glob_emis2,chm_G_ni,chm_G_nj,chm_l_nk,lun1,2,NAME4(13),    kpos_BC2H)
+!      call aero_read_1(glob_emis2,chm_G_ni,chm_G_nj,chm_l_nk,lun1,3,NAME4(imonth),kpos_BC3E)
+!      call aero_read_1(glob_emis2,chm_G_ni,chm_G_nj,chm_l_nk,lun1,3,NAME4(13),    kpos_BC3H)
+!      call aero_read_1(glob_emis2,chm_G_ni,chm_G_nj,chm_l_nk,lun1,4,NAME4(imonth),kpos_BC4E)
+!      call aero_read_1(glob_emis2,chm_G_ni,chm_G_nj,chm_l_nk,lun1,4,NAME4(13),    kpos_BC4H)
+!      call aero_read_1(glob_emis2,chm_G_ni,chm_G_nj,chm_l_nk,lun1,5,NAME4(imonth),kpos_BC5E)
+!      call aero_read_1(glob_emis2,chm_G_ni,chm_G_nj,chm_l_nk,lun1,5,NAME4(13),    kpos_BC5H)
+!
+!      call aero_read_1(glob_emis2,chm_G_ni,chm_G_nj,chm_l_nk,lun1,1,NAME5(imonth),kpos_OM1E)  ! monthly
+!      call aero_read_1(glob_emis2,chm_G_ni,chm_G_nj,chm_l_nk,lun1,1,NAME5(13),    kpos_OM1H)
+!      call aero_read_1(glob_emis2,chm_G_ni,chm_G_nj,chm_l_nk,lun1,2,NAME5(imonth),kpos_OM2E)
+!      call aero_read_1(glob_emis2,chm_G_ni,chm_G_nj,chm_l_nk,lun1,2,NAME5(13),    kpos_OM2H)
+!      call aero_read_1(glob_emis2,chm_G_ni,chm_G_nj,chm_l_nk,lun1,3,NAME5(imonth),kpos_OM3E)
+!      call aero_read_1(glob_emis2,chm_G_ni,chm_G_nj,chm_l_nk,lun1,3,NAME5(13),    kpos_OM3H)
+!      call aero_read_1(glob_emis2,chm_G_ni,chm_G_nj,chm_l_nk,lun1,4,NAME5(imonth),kpos_OM4E)
+!      call aero_read_1(glob_emis2,chm_G_ni,chm_G_nj,chm_l_nk,lun1,4,NAME5(13),    kpos_OM4H)
+!      call aero_read_1(glob_emis2,chm_G_ni,chm_G_nj,chm_l_nk,lun1,5,NAME5(imonth),kpos_OM5E)
+!-j2   call aero_read_1(glob_emis2,chm_G_ni,chm_G_nj,chm_l_nk,lun1,5,NAME5(13),    kpos_OM5H)
+
+      iclose=fstfrm(lun1)
+      call fclos(lun1)
+
+      nmvr='GEIA'  
+      call chm_put3perbus(glob_emis2,chm_G_ni,chm_G_nj,chm_l_nk,chm_busper3D,chm_bper_len,nmvr)
+!
+!-------------------------------- 23 fields
+!
+      isoil_file=1
+      if(Lun_out.gt.0) write(*,*)'READING IN AERO SOIL from:',aero_soil_file_S(isoil_file)
+
+      iopen=fnom(lun1,aero_soil_file_S(isoil_file),'RND+R/O',0)
+      iopen=fstouv(lun1,'RND')
+!
+      glob_emis2=0.0
+!
+      call aero_read_1(glob_emis2,chm_G_ni,chm_G_nj,chm_l_nk,lun1, 1,'TEXT',kpos_SO01)
+      call aero_read_1(glob_emis2,chm_G_ni,chm_G_nj,chm_l_nk,lun1, 2,'TEXT',kpos_SO02)
+      call aero_read_1(glob_emis2,chm_G_ni,chm_G_nj,chm_l_nk,lun1, 3,'TEXT',kpos_SO03)
+      call aero_read_1(glob_emis2,chm_G_ni,chm_G_nj,chm_l_nk,lun1, 4,'TEXT',kpos_SO04)
+      call aero_read_1(glob_emis2,chm_G_ni,chm_G_nj,chm_l_nk,lun1, 5,'TEXT',kpos_SO05)
+      call aero_read_1(glob_emis2,chm_G_ni,chm_G_nj,chm_l_nk,lun1, 6,'TEXT',kpos_SO06)
+      call aero_read_1(glob_emis2,chm_G_ni,chm_G_nj,chm_l_nk,lun1, 7,'TEXT',kpos_SO07)
+      call aero_read_1(glob_emis2,chm_G_ni,chm_G_nj,chm_l_nk,lun1, 8,'TEXT',kpos_SO08)
+      call aero_read_1(glob_emis2,chm_G_ni,chm_G_nj,chm_l_nk,lun1, 9,'TEXT',kpos_SO09)
+      call aero_read_1(glob_emis2,chm_G_ni,chm_G_nj,chm_l_nk,lun1,10,'TEXT',kpos_SO10)
+      call aero_read_1(glob_emis2,chm_G_ni,chm_G_nj,chm_l_nk,lun1,11,'TEXT',kpos_SO11)
+      call aero_read_1(glob_emis2,chm_G_ni,chm_G_nj,chm_l_nk,lun1,12,'TEXT',kpos_SO12)
+!
+      iclose=fstfrm(lun1)
+      call fclos(lun1)
+
+      isoil_file=2
+      if(Lun_out.gt.0) write(*,*)'READING IN AERO CLAY from:',aero_soil_file_S(isoil_file)
+
+      iopen=fnom(lun1,aero_soil_file_S(isoil_file),'RND+R/O',0)
+      iopen=fstouv(lun1,'RND')
+
+      call aero_read_1(glob_emis2,chm_G_ni,chm_G_nj,chm_l_nk,lun1, 1,'CLAY',kpos_CL01)
+      call aero_read_1(glob_emis2,chm_G_ni,chm_G_nj,chm_l_nk,lun1, 2,'CLAY',kpos_CL02)
+
+      iclose=fstfrm(lun1)
+      call fclos(lun1)
+
+      isoil_file=3
+      if(Lun_out.gt.0) write(*,*)'READING IN AERO SAND from:',aero_soil_file_S(isoil_file)
+
+      iopen=fnom(lun1,aero_soil_file_S(isoil_file),'RND+R/O',0)
+      iopen=fstouv(lun1,'RND')
+
+      call aero_read_1(glob_emis2,chm_G_ni,chm_G_nj,chm_l_nk,lun1, 1,'SAND',kpos_SA01)
+      call aero_read_1(glob_emis2,chm_G_ni,chm_G_nj,chm_l_nk,lun1, 2,'SAND',kpos_SA02)
+      call aero_read_1(glob_emis2,chm_G_ni,chm_G_nj,chm_l_nk,lun1, 3,'SAND',kpos_SA03)
+      call aero_read_1(glob_emis2,chm_G_ni,chm_G_nj,chm_l_nk,lun1, 4,'SAND',kpos_SA04)
+      call aero_read_1(glob_emis2,chm_G_ni,chm_G_nj,chm_l_nk,lun1, 5,'SAND',kpos_SA05)
+      call aero_read_1(glob_emis2,chm_G_ni,chm_G_nj,chm_l_nk,lun1, 6,'SAND',kpos_SA06)
+
+      iclose=fstfrm(lun1)
+      call fclos(lun1)
+
+      nmvr='SOIL'
+
+
+      call chm_put3perbus(glob_emis2,chm_G_ni,chm_G_nj,chm_l_nk,chm_busper3D,chm_bper_len,nmvr)
+!
+      deallocate(glob_emis2)
+
+!-----------------------------------------------------------------------------------------
+      return
+      end
+!-----------------------------------------------------------------------------------------
+      subroutine aero_read_1(glob_emis2,ni,nj,nk,lun1,ip3,nomvar,kpos_nmvr)
+!-----------------------------------------------------------------------------------------
+#include <model_macros_f.h>
+#include "impnone.cdk"
+#include "chm_ptopo_grid.cdk"
+#include "ac_lun.cdk"
+!
+      character *4 nomvar
+!
+      integer ni,nj,nk
+      real glob_emis2(ni,nj,nk)
+!
+      integer lun1,ip3,kpos_nmvr
+      integer key1
+      integer fstlir
+      integer nix,njx,nkx
+
+      integer i,j
+      integer ip1,ip2,istamp,ierr,fstopc
+       
+      character*2 grid_type      
+
+      real, dimension(:,:),allocatable :: glob_emis
+
+!-----------------------------------------------------------------------------------------
+!
+      if(Lun_out.gt.0) then
+         ierr = fstopc('MSGLVL', 'INFORM',0)  ! print information messages (echo from lire)
+      else
+         ierr = fstopc('MSGLVL', 'SYSTEM',0)  ! print system (internal) error messages only
+      end if
+!
+      call ac_get_grid(grid_type)
+!
+      if(grid_type.eq.'GV'.or.grid_type.eq.'GU') then
+         allocate(glob_emis (chm_G_ni+1,chm_G_nj))
+      else if(grid_type.eq.'LU') then
+         allocate(glob_emis (chm_G_ni,chm_G_nj))
+      end if
+!
+      glob_emis =0.0
+!     _____________________________________________________________________________________
+!     fstlir is done into glob_emis because emission records could have +1 in the dimension
+
+      istamp=-1
+      ip1=-1
+      ip2=-1
+!
+      key1 = fstlir(glob_emis,lun1,nix,njx,nkx,istamp,' ',ip1,ip2,ip3,' ',nomvar)
+      if(key1.lt.0) then
+         write(*,*)'   AERO emission field not found ',nomvar,' --> aborting'
+         call abort 
+      end if
+
+      do j=1,chm_G_nj
+         do i=1,chm_G_ni
+            glob_emis2(i,j,kpos_nmvr) = glob_emis(i,j)
+         enddo
+      enddo
+!
+      deallocate(glob_emis)
+!
+!-----------------------------------------------------------------------------------------
+      return
+      end
+
+

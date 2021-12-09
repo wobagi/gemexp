@@ -1,0 +1,123 @@
+      SUBROUTINE THCAL3B(TSH,TSHB, TG,GT, SH,SHT,SHXKJ, 
+     1                   ILEV,LEV, ILG,IS,IF,IRAD)
+C
+C     * JUL 10/03 - M.LAZARE. TASKLOCAL->THREADPRIVATE (NEW VERSION BASED
+C     *                       ON THCAL3).
+C     * MAY 20/97 - M.LAZARE. PREVIOUS VERSION THCAL3:
+C     *                       "*PDIR TASKLOCAL" MULTITASKING DIRECTIVE
+C     *                       ADDED FOR COMMON BLOCK "LWCONS" WHICH
+C     *                       HAS SOME ELEMENTS NOT INITIALIZED BY DATA
+C     *                       STATEMENTS.    
+C     * FEB 19/91 - M.LAZARE. - LOWEST INTERFACE OF TSHB SET TO MINIMUM 
+C     *                         OF GT,TSROW IN ORDER TO "MODEL" SUPER-
+C     *                         ADIABATIC LAPSE RATE PROFILE WITH JUMP
+C     *                         DISCONTINUITY UNDER UNSTABLE CONDITIONS.
+C     *                       - PCARDI REMOVED FROM "LWCONS" COMMON 
+C     *                         BLOCK (NOT USED IN NEWER LONGWAVE). 
+  
+C     * AUG 28/89 - M.LAZARE. - LIKE PREVIOUS VERSION THCAL2 EXCEPT:  
+C     *                       A. LWCONS COMMON BLOCK MODIFIED TO BE 
+C     *                          CONSISTENT WITH OTHER LOCATIONS IN 
+C     *                          CODE.
+C     *                       B. PASSED "IRAD" MODEL OPTION PARAMETER 
+C     *                          USED TO DECIDE MOON LAYER TEMPERATURE
+C     *                          CALCULATION (INSTEAD OF PREVIOUS 
+C     *                          PASSED LOGICAL SWITCH "OLDRAD"). 
+C     * SEP 23/88 - M.LAZARE. - PREVIOUS MODEL VERSION GCM6.
+C 
+C     * SET TEMPERATURE ARRAYS FOR PHYSICS ON THERMODYNAMICS LEVELS 
+C     * FOR HYBRID VERSION OF MODEL.
+C     * SHB ARE THERMODYNAMICS LAYER INTERFACES,
+C     * SH  ARE THERMODYNAMICS MID LAYER POSITIONS. 
+C     * LEV = ILEV+1. 
+C     * 
+C     *        THERMODYNAMICS 
+C     *     INTERFACE   MID LAYER  TG(MODEL) TSH(TH)     TSHB(TF) 
+C     * 
+C     *        SIGMA=0. ////////////////////////////////////////////////
+C     *                  MOON LAYER          TSH(1) 
+C     * SHT(1)=THERMO.TOP ------------------------------ TSHB(1)
+C     *                  SH(1)     TG(1)     TSH(2) 
+C     * SHT(2)=SHB(1) ---------------------------------- TSHB(2)
+C     *                  SH(2)     TG(2)     TSH(3) 
+C     * SHT(3)=SHB(2) ---------------------------------- TSHB(3)
+C     *                  SH(3)     TG(3)     TSH(4) 
+C     * SHT(4)=SHB(3) ---------------------------------- TSHB(4)
+C     *                  SH(4)     TG(4)     TSH(5) 
+C     * SHT(5)=SHB(4) ---------------------------------- TSHB(5)
+C     *                  SH(5)     TG(5)     TSH(6) 
+C     * SHT(6)=SHB(5)=1. /////////////////////////////// TSHB(6)
+  
+      IMPLICIT REAL (A-H,O-Z),
+     +INTEGER (I-N)
+
+      REAL TG  (ILG,ILEV),   GT (ILG) 
+      REAL TSH (ILG, LEV), TSHB (ILG, LEV)
+      REAL  SH (ILG,ILEV),  SHT (ILG, LEV), SHXKJ(ILG,ILEV) 
+
+      COMMON /LWCONS/ MAXC,CO2,SIG1,CDAY,X10E,RGRAV 
+!$OMP THREADPRIVATE (/LWCONS/)  
+C-----------------------------------------------------------------------
+C     * MID LAYER TEMPERATURES, WITH EXTRA ONE AT TOP.
+C 
+      DO 100 L=1,ILEV 
+      DO 100 I=IS,IF
+      TSH(I,L+1) = TG(I,L)
+  100 CONTINUE
+C 
+C     * LAYER INTERFACE TEMPERATURES, WITH EXTRA ONE AT TOP.
+C     * TEMPERATURE DISCONTINUITY AT THE GROUND BASED ON ADIABATIC
+C     * EXTRAPOLATION TO SURFACE UNDER UNSTABLE CONDITIONS ONLY, I.E. 
+C     * FOR THESE CASES MOST OF THE SUPERADIABATIC LAPSE RATE IS
+C     * CONTAINED VERY CLOSE TO THE SURFACE.
+C 
+      DO 200 I=IS,IF
+  200 TSHB(I,LEV)=MIN( TSH(I,LEV)/SHXKJ(I,ILEV), GT(I) )
+C 
+      DO 300 L=1,ILEV-1 
+      DO 300 I=IS,IF
+      TSHB(I,L+1) = (TSH(I,L+1)*LOG(SH (I,L+1)/SHT(I,L+1)) 
+     1              +TSH(I,L+2)*LOG(SHT(I,L+1)/SH (I  ,L)))
+     2                         /LOG(SH (I,L+1)/SH (I  ,L)) 
+  300 CONTINUE
+C 
+C     * MOON LAYER TEMPERATURE. 
+C     * USE SIG1 FROM GCM6 TO DETERMINE CONDITION TO APPLY, IN ORDER TO 
+C     * AVOID LONGITUDINAL GRADIENTS. 
+C     * THE CALCULATION IS THE SAME AS PREVIOUS MODEL VERSIONS FOR LOW
+C     * MODEL LIDS OR THE OLD RADIATION SCHEME. 
+C     * FOR THE NEW RADATION, INTERPOLATION IN "SIGMA" (I.E. MASS) IS 
+C     * DONE UP TO THE MODEL TOP (AS DEFINE BY THE DYNAMICS) TO PRODUCE 
+C     * TSHB(1) AND A SIMILAR INTERPOLATION IS PERFORMED TO CALCULATE 
+C     * THE MOON LAYER TEMPERATURE, WHICH IS ASSUMED TO LIE AT THE
+C     * HALF-MASS POINT ABOVE IT. 
+C     * HOWEVER, IF THE MODEL TOP LIES AT OR ABOVE THE STRATOPAUSE
+C     * (P=1 MB) THEN AN ISOTHERMAL TEMPERATURE STRUCTURE ABOVE THE 
+C     * MODEL TOP IS ASSUMED TO EXIST.
+C 
+      IF(SIG1.GT.0.020) THEN
+         DO 400 I=IS,IF 
+            TSHB(I,1)=TSH(I,2)
+             TSH(I,1)=TSH(I,2)
+  400    CONTINUE 
+      ELSE
+         IF(IRAD.EQ.0) THEN 
+            DO 450 I=IS,IF
+               TSHB(I,1)=TSH(I,2) 
+                TSH(I,1)=MAX(220.,TSH(I,2)+20.) 
+  450       CONTINUE
+         ELSE 
+            DO 500 I=IS,IF
+               SLOPE=(TSH(I,2)-TSHB(I,2))/LOG(SH(I,1)/SHT(I,2))
+               TSHB(I,1)=TSH(I,2)+SLOPE*LOG(SHT(I,1)/SH(I,1))
+               TSH(I,1)=TSHB(I,1) 
+               IF(SIG1.GT.0.001) THEN 
+                  TSH(I,1)=TSH(I,2)+20. 
+               ENDIF
+  500       CONTINUE
+         ENDIF
+      ENDIF 
+C 
+      RETURN
+C-----------------------------------------------------------------------
+      END 

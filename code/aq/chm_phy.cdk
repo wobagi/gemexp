@@ -1,0 +1,101 @@
+#if defined (DOC)
+! *
+! ***comdeck chm_phy.cdk
+! *
+! *______________________________________________________________________
+! *                                                                      |
+! * Variables from physics buses that are needed for the                 |
+! * York University Statospheric Chemistry package                       |
+! *______________________________________________________________________|
+! *                    |                                         |       |
+! * NAME               | DESCRIPTION                             |  BUS  |
+! *--------------------|-------------------------------------------------|
+! * gzmoins6
+! * pplus              | Pressure at t=t+dt                      |  dyn  |
+! * vplus              | X-comp of wind at t=t+dt                |  dyn  |
+! * uplus              | Y-comp of wind at t=t+dt                |  dyn  |
+! * tplus              | Temperature at t=t+dt                   |  dyn  |
+! * huplus             | Specific humidity at t=t+dt             |  dyn  |
+! * omegap             | DP/DT (VERTICAL VELOCITY)               |  dyn  | 
+! * sigm               | LOCAL SIGMA VALUES                      |  dyn  |
+! * mg                 | LAND-SEA MASK                           |  per  |
+! * alvis              | VISIBLE SURFACE ALBEDO                  |  per  |
+! * cosas              | COSINE OF THE SOLAR ANGLE FOR AVERAGING |  per  |
+! * nt                 | 2-D CLOUD COVER                         |  per  |
+! * h                  | HEIGHT OF BOUNDARY LAYER                |  per  |
+! * snodp              | SNOW DEPTH                              |  per  |
+! * glacier            | CONTINENTAL ICE FRACTION                |  per  |
+! * glsea              | SEA ICE FRACTION                        |  per  |
+! * z0                 | MOMENTUM ROUGHNESS LENGTH               |  per  |
+! * dlat               | LATITUDE                                |  per  |
+! * dlon               | LONGITUDE                               |  per  |
+! * tsoil              | URFACE AND SOIL TEMPERATURES            |  per  |
+! * wsoil              | SOIL VOLUMETRIC WATER CONTENTS          |  per  |
+! * fdss               | VISIOBLE  FLUX ABSORBED BY GROUND       |  per  |
+! * udiag              | SCREEN LEVEL X-COMPONENT OF WIND        |  per  |
+! * vdiag              | SCREEN LEVEL Y-COMPONENT OF WIND        |  per  |
+! * twater             | SEA SURFACE TEMPERATURE                 |  per  |
+! * lwc                | CLOUD/WATER CONTENT AT TIME T           |  per  |
+! * psn                | FRACTION OF THE GRID COVERED BY SNOW    |  vol  |
+! * rt                 | TOTAL PRECIPITATION RATE                |  vol  |
+! * mol                | MONIN-OBUKHOV LENGTH [-1000,1000]       |  vol  |
+! * ue                 | FRICTION VELOCITY (M/S)                 |  vol  |
+! * rr                 | STRATIFORM PRECIP. RATE                 |  vol  |
+! * rc                 | IMPLICIT PRECIP. RATE                   |  vol  |
+! * kt                 | T/HU VERTICAL DIFF. COEFF.(M2/S)        |  vol  |
+! * tve                | VIRTUAL TEMP. (STAGG. LEVELS)           |  vol  |
+! *______________________________________________________________________
+! *
+#endif
+
+      integer gzmoins6
+      integer pplus ,vplus,uplus,tplus  ,huplus
+      integer omegap,sigm ,mg   ,alvis  ,cosas
+      integer nt    ,h    ,snodp,glacier,glsea
+      integer z0    ,dlat ,dlon ,tsoil  ,wsoil
+      integer fdss  ,udiag,vdiag,twater, cang
+      integer lwc  ,psn   ,rt
+      integer mol   ,ue   ,rr   ,rc     ,kt
+      integer tve
+
+      integer gzmoins6_siz
+      integer pplus_siz ,vplus_siz,uplus_siz,tplus_siz  ,huplus_siz
+      integer omegap_siz,sigm_siz ,mg_siz   ,alvis_siz  ,cosas_siz
+      integer nt_siz    ,h_siz    ,snodp_siz,glacier_siz,glsea_siz
+      integer z0_siz    ,dlat_siz ,dlon_siz ,tsoil_siz  ,wsoil_siz
+      integer fdss_siz  ,udiag_siz,vdiag_siz,twater_siz, cang_siz
+      integer lwc_siz  ,psn_siz   ,rt_siz
+      integer mol_siz   ,ue_siz   ,rr_siz   ,rc_siz     ,kt_siz
+      integer tve_siz
+
+
+      common / chm_phy_offsets  /               &
+            gzmoins6,                           &  
+            pplus ,vplus,uplus,tplus  ,huplus,  &
+            omegap,sigm ,mg   ,alvis  ,cosas,   &
+            nt    ,h    ,snodp,glacier,glsea,   &
+            z0    ,dlat ,dlon ,tsoil  ,wsoil,   &
+            fdss  ,udiag,vdiag,twater , cang,   &
+            lwc  ,psn   ,rt,                    &
+            mol   ,ue   ,rr   ,rc     ,kt,      &
+            tve
+
+      common / chm_phy_sizes  /                                      &
+            gzmoins6_siz,                                            &    
+            pplus_siz ,vplus_siz,uplus_siz,tplus_siz  ,huplus_siz,   &
+            omegap_siz,sigm_siz ,mg_siz   ,alvis_siz  ,cosas_siz,    &
+            nt_siz    ,h_siz    ,snodp_siz,glacier_siz,glsea_siz,    &
+            z0_siz    ,dlat_siz ,dlon_siz ,tsoil_siz  ,wsoil_siz,    &
+            fdss_siz  ,udiag_siz,vdiag_siz,twater_siz , cang_siz,    &
+            lwc_siz  ,psn_siz   ,rt_siz,                             &
+            mol_siz   ,ue_siz   ,rr_siz   ,rc_siz     ,kt_siz,       &
+            tve_siz
+
+
+
+
+
+
+
+
+

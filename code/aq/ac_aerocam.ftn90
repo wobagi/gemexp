@@ -1,0 +1,434 @@
+!
+!**s/r ac_aerocam.ftn  ..calling sequence similar to chm_exe.ftn90 with some extensions 
+!                        at the end of parameter list
+!
+#include <model_macros_f.h>
+!
+  subroutine ac_aerocam( &
+      F_chmbusent   ,F_chmbusper    ,F_chmbusdyn    ,F_chmbusvol   ,     &
+      F_chm_bent_siz,F_chm_bdyn_siz ,F_chm_bper_siz ,F_chm_bvol_siz,     &
+      F_chm_bdyn_top,F_chm_bper_top ,F_chm_bvol_top ,F_chm_bent_top,     &
+      F_busent      ,F_busdyn       ,F_busper       ,F_busvol      ,     &
+      F_bent_siz    ,F_bdyn_siz     ,F_bper_siz     ,F_bvol_siz    ,     &
+      F_dt,F_j,F_step,F_cpu,F_p_ni,F_chm_ni,Nk,                          &
+      gas_tr_SO2,gas_tr_NO3,gas_tr_OH,gas_tr_O3,gas_tr_H2O2,gas_tr_HNO3, &
+      tnd,rhet_n2o5,rhet_hmhp,chem_date_curr,emis_mr_so4,emis_mr_bc,emis_mr_oc)
+
+! note:
+!      tnd - is passed but it is not used .. down to aerexe1.ftn :( 
+!
+!
+#include "impnone.cdk"
+!
+      integer F_chm_bent_siz, F_chm_bdyn_siz
+      integer F_chm_bper_siz, F_chm_bvol_siz
+      integer F_chm_bent_top, F_chm_bdyn_top
+      integer F_chm_bper_top, F_chm_bvol_top
+      real    F_chmbusent(F_chm_bent_siz) , F_chmbusdyn(F_chm_bdyn_siz)
+      real    F_chmbusper(F_chm_bper_siz) , F_chmbusvol(F_chm_bvol_siz)
+!
+      integer F_bent_siz, F_bdyn_siz
+      integer F_bper_siz, F_bvol_siz
+      real    F_busent(F_bent_siz) , F_busdyn(F_bdyn_siz)
+      real    F_busper(F_bper_siz) , F_busvol(F_bvol_siz)
+      real    F_dt
+      integer F_cpu,F_j,F_step,F_p_ni,F_chm_ni, Nk
+!
+!-----------------------------------------------------------------
+!Arguments
+!
+! Argument Name    In/Out   description
+!-----------------------------------------------------------------
+! F_chmbusent       I/O   Entry input field(s)  (chemical)
+! F_chmbusdyn       I/O   Dynamics input field  (chemical)
+! F_chmbusper       I/O   Historic variables for the chemistry
+! F_chmbusvol       I/O   Chemical tendencies and other output 
+!                         fields from the physics
+! F_chm_bent_siz    In    dimension of F_chmbusent 
+! F_chm_bdyn_siz    In    dimension of F_chmbusdyn 
+! F_chm_bper_siz    In    dimension of F_chmbusper 
+! F_chm_bvol_siz    In    dimension of F_chmbvol_siz
+! F_chm_bent_top    In    number of fields (species) in F_chmbusent 
+! F_chm_bdyn_top    In    number of fields (species) in  F_chmbusdyn 
+! F_chm_bper_top    In    number of fields (species) in  F_chmbusper 
+! F_chm_bvol_top    In    number of fields (species) in  F_chmbvol_siz
+!
+! F_busent          In    entry input field(s) (physics)
+! F_busdyn          In    dynamics input field (physics)
+! F_busper          In    historic variables for the physics (physics)
+! F_busvol          In    physics tendencies and other output 
+!                         fields from the physics (physics)
+! F_bent_siz        In    dimension of F_busent   (physics)
+! F_bdyn_siz        In    dimension of F_busdyn   (physics)
+! F_bper_siz        In    dimension of F_busper   (physics)
+! F_bvol_siz        In    dimension of F_bvol_siz (physics)
+! F_dt              In    timestep (sec.)
+! F_j               In    slice number
+! F_step            In    timestep number
+! F_cpu             In    cpu number executing slice "F_j"
+! F_p_ni            In    horizontal running length (physics)
+! F_chm_ni          In    horizontal running length (chemistry)
+! Nk                In    vertical dimension
+!
+!----------------------------------------------------------------
+
+      real tnd(F_CHM_NI,NK)
+
+      real gas_tr_SO2(F_chm_ni,nk)
+      real gas_tr_NO3(F_chm_ni,nk)
+      real gas_tr_OH(F_chm_ni,nk)
+      real gas_tr_O3(F_chm_ni,nk)
+      real gas_tr_H2O2(F_chm_ni,nk)
+      real gas_tr_HNO3(F_chm_ni,nk)
+
+      real gas_emis_SO4(F_chm_ni)
+
+      real emis_mr_so4(F_chm_ni,nk)
+      real emis_mr_bc (F_chm_ni,nk)
+      real emis_mr_oc (F_chm_ni,nk)
+
+      real rhet_n2o5(F_chm_ni,nk)
+      real rhet_hmhp(F_chm_ni,nk)
+
+      real PRETROW(F_chm_ni,NK-1,2)
+      real qr3(F_CHM_NI,NK)
+
+      real ZHGHT(F_CHM_NI,NK)
+
+      REAL delt
+
+      integer chem_date_curr(14)
+      integer n,k,i,indx,ii,jj
+
+      integer ik
+      ik(i,k) = (k-1)*F_chm_ni + i - 1
+
+!----
+!implicits
+!
+#include "chm_macros_f.h"
+
+!#include "chm_bus.cdk"
+!
+#include "phy_macros_f.h"
+#include "phybus.cdk"
+#include "aero_chem_order_cam.cdk"
+#
+#include "consphy.cdk"
+
+#include "aq_emis_sfc.cdk"
+#include "chm_bus.cdk"
+#include "aq_land_bats15.cdk"
+
+!
+! ---chemexe.cdk
+
+      real aero_tr_slb(F_chm_ni,nk,gn_aerochem)
+      real aero_diags(F_chm_ni,nk,gn_aerodiags)
+
+      real chem_land(F_chm_ni,gn_luc)
+
+!c dyn bus
+      real psfc(F_chm_ni)
+      real fdxdy(F_chm_ni)
+      real tt(F_chm_ni,nk)
+      real hu(F_chm_ni,nk)
+      real sig(F_chm_ni,nk)
+      real pres(F_chm_ni,nk)
+      real fws(F_chm_ni,nk)
+      real uu(F_chm_ni,nk)
+      real vv(F_chm_ni,nk)
+      real fmodv(F_chm_ni,nk)
+
+!c per bus
+      real grmg(F_chm_ni)
+      real sza(F_chm_ni)
+      real csza(F_chm_ni)
+      real tcld(F_chm_ni)
+      real snow(F_chm_ni)
+      real ice(F_chm_ni)
+      real deglat(F_chm_ni)
+      real deglon(F_chm_ni)
+      real lon(F_chm_ni)
+      real ftsoil(F_chm_ni)
+      real fhs(F_chm_ni)
+      real par(F_chm_ni)
+      real surfwd(F_chm_ni)
+      real sst(F_chm_ni)
+!
+      real grcld_fn(F_chm_ni,nk) !units
+      real grcld_ck(F_chm_ni,nk)
+      real grcld_cs(F_chm_ni,nk)
+      real flwc(F_chm_ni,nk)
+!
+      real grrain_rt(F_chm_ni) ! units
+!
+      real qr(F_chm_ni,2)
+!
+      real fkt(F_chm_ni,nk)
+      real ftv(F_chm_ni,nk)
+
+      real grdz(F_chm_ni,nk) !units 
+
+!c for dz
+      real tvirt(F_chm_ni,nk)
+      real hght(F_chm_ni,nk)
+      real work(F_chm_ni,nk,4)
+
+!-----end of chemexe.cdk
+
+      real season(F_chm_ni)
+!
+      integer idate_current(14)
+      integer jday
+      real rhour,rjulien
+!
+      integer imonth, local_hour(F_chm_ni)
+!
+      integer trnch,kount,nj1
+!
+! --------------------------------------------------------------------------------------
+! 
+!      write(*,*) 'ac_aerocam-0' 
+!      call flush(6)
+!
+      call  aero_load_tracers(aero_tr_slb,                     &
+                             F_chmbusdyn,                      &
+                             F_chmbusper,                      &
+                             F_busdyn(huplus),                 &  ! SPECIFIC HUMIDITY AT T+DT
+                             F_chm_bdyn_siz,F_chm_bper_siz,    &
+                             F_chm_ni,nk,                      &
+                             gas_tr_SO2,gas_tr_NO3,gas_tr_OH,gas_tr_O3,gas_tr_H2O2,gas_tr_HNO3)
+
+!!      if(F_step.eq.1) call aero_scale(aero_tr_slb,F_chm_ni,nk,gn_aerochem)
+
+!     load SO4 gas emissions for use in place of aero_SO4 emissions
+!
+!-J2      do i=1,F_chm_ni
+!         gas_emis_SO4(i)   = F_chmbusper(emis_sfc   + ik(i,cnemSO4))
+!      end do
+!
+!     load land stuff 
+!
+      do k=1,gn_luc
+         do i=1,F_chm_ni
+            chem_land(i,k) = F_chmbusper(land_use  + ik(i,k))
+         end do
+      end do
+!
+      rhet_n2o5=0.0
+      rhet_hmhp=0.0
+      PRETROW=0.0
+      qr3=0.0
+      ZHGHT=0.0
+
+!      write(*,*) 'ac_aerocam-1' 
+!      call flush(6)
+
+!-----------------------------------------
+
+      do i=1,F_chm_ni
+         psfc(i) = F_busdyn(pplus+i-1)
+      enddo
+!
+!     3D - load from dynamics bus
+!
+      do k=1,nk
+         do i=1,F_chm_ni
+            tt(i,k)    = F_busdyn(tplus  + ik(i,k))
+            hu(i,k)    = F_busdyn(huplus + ik(i,k))
+            sig(i,k)   = F_busdyn(sigm   + ik(i,k))
+            fws(i,k)   = F_busdyn(omegap + ik(i,k))
+            uu(i,k)    = F_busdyn(uplus  + ik(i,k))
+            vv(i,k)    = F_busdyn(vplus  + ik(i,k))
+            fmodv(i,k) = sqrt(uu(i,k)**2+vv(i,k)**2)
+            pres(i,k)  = psfc(i) * sig(i,k)
+         end do
+      end do
+!
+!-----------------------------------------
+!     2D - load from permanent physics bus
+!
+!      write(*,*) 'ac_aerocam-2' 
+!      call flush(6)
+
+      do i=1,F_chm_ni
+         grmg(i)       = F_busper(mg+i-1)
+         csza(i)       = F_busper(cosas+i-1)
+         sza(i)        = acos(csza(i))*180./PI
+         tcld(i)       = F_busper(nt+i-1)
+         snow(i)       = F_busper(psn+i-1)
+         ice(i)        = min(1.0,F_busper(glacier+i-1)+F_busper(glsea+i-1)*(1-grmg(i)))
+         deglat(i)     = F_busper(dlat +i-1) * 180./PI  ! lat in degrees
+         lon(i)        = F_busper(dlon +i-1)            ! lon in radians
+         deglon(i)     = lon(i) * 180./PI           ! lon in degrees
+         ftsoil(i)     = F_busper(tsoil +i -1)
+         fhs(i)        = F_busper(wsoil+i-1)
+         par(i)        = F_busper(fdss+i-1)
+         surfwd(i)     = sqrt(F_busper(udiag+i-1)**2+F_busper(vdiag+i-1)**2) !using screen
+         sst(i)        = F_busper(twater + i - 1)
+      end do
+!
+!     3D - load from permanent physics bus 
+!
+! in 3.3.0:  phy_ini.ftn 
+! 011       L. Spacek (Aug 2004) - cloud clean-up ccs, fn,  ckt, cck, ccn
+!                                       change to fxp, fbl, fsc, fdc, ftot resp.
+!      write(*,*) 'ac_aerocam-3' 
+!      call flush(6)
+
+
+      do k=1,nk
+         do i=1,F_chm_ni
+            grcld_fn(i,k)   = F_busper(ftot   + ik(i,k)) ! old F_busper(ccn + ik(i,k))  ! total clouds
+            grcld_ck(i,k)   = F_busper(fdc    + ik(i,k)) ! old F_busper(cck + ik(i,k))  ! deep convective clouds
+            grcld_cs(i,k)   = F_busper(fxp    + ik(i,k)) ! old F_busper(ccs + ik(i,k))  ! stratiform clouds;
+            flwc(i,k)       = F_busper(lwc    + ik(i,k))
+         end do
+      end do
+!
+!     ___________________________
+!     2D - load from volatile bus
+!
+      do i=1,F_chm_ni
+         grrain_rt(i) = F_busvol(rt+i-1)
+         qr(i,1)      = F_busvol(rr+i-1)       ! strat precip rate
+         qr(i,2)      = F_busvol(rc+i-1)       ! conv precip rate
+      end do
+!     ___________________________
+!     3D - load from volatile bus
+!
+!      write(*,*) 'ac_aerocam-4' 
+!      call flush(6)
+
+      do k=1,nk
+         do i=1,F_chm_ni
+            fkt(i,k) = F_busvol(kt + ik(i,k))
+            ftv(i,k) = F_busvol(tve + ik(i,k))
+!               comment : this is be a switch depending on if kf convection is used -LN
+!               they won't be defined if not
+
+!with kfc   qr3(i,k) = F_busvol(rnflx + ik(i,k)) + F_busvol(snoflx + ik(i,k)) + F_busper(kfcrf + ik(i,k)) + F_busper(kfcsf + ik(i,k))
+            qr3(i,k) = F_busvol(rnflx + ik(i,k)) + F_busvol(snoflx + ik(i,k)) 
+
+         end do
+      end do
+!     
+      do k=1,nk-1
+         do i=1,F_chm_ni
+            PRETROW(i,k,1) = qr3(i,k+1)
+         end do
+      end do
+!
+!-----------------------------------------
+!      write(*,*) 'ac_aerocam-5' 
+!      call flush(6)
+
+!
+      hght=0.0
+! 
+      call mfotvt(tvirt,F_busdyn(tplus),F_busdyn(huplus),F_chm_ni,nk,F_chm_ni)
+      call integ2(hght,tvirt,-rgasd,F_busdyn(sigm),work(1,1,1),work(1,1,2),work(1,1,3),F_chm_ni,F_chm_ni,F_chm_ni,nk,.true.)
+      do k=1,nk
+         do i=1,F_chm_ni
+            hght(i,k) = hght(i,k)/GRAV
+         end do
+      end do
+!
+!      write(*,*) 'ac_aerocam-5x' 
+!      call flush(6)
+
+      do k=1,nk
+         do i=1,F_chm_ni
+            if(k.eq.1) then
+               grdz(i,k) = 0.5 * (hght(i,1) - hght(i,2))
+            else if (k.eq.nk) then
+               grdz(i,k) = hght(i,nk-1)*0.5 ! bottom layer 1/2 thickness in m
+            else
+               grdz(i,k) = 0.5*(hght(i,k-1)-hght(i,k+1)) ! thickness between mid-levels in metres
+            endif
+            ZHGHT(i,k)=hght(i,k)  ! metres
+         enddo
+!!       write(*,*) 'ac_aerocam: ',k, grdz(1,k),ZHGHT(1,k)  
+      enddo 
+
+!      write(*,*) 'ac_aerocam-6' 
+!      call flush(6)
+
+!
+!-----------------------------------------
+! aerosol interface (do vdiff, depo, emissions inside)
+!
+         delt = 0.5*F_dt ! use half DT for aerosol dynamics - different scheme than in GEM ... it used to be in GCM
+!
+         nj1=1          ! .. passed to aeroexe1.ftn but not used 
+!
+         trnch=F_j
+         kount=F_step
+!
+!         write(*,*) 'ac_aerocam-calling aero_chem_cam' 
+!         call flush(6)
+!
+         call aero_chem_cam(F_busper(mg),delt,trnch,kount,F_chm_ni,nj1,nk,          &     ! F_busper to get MG only !!
+                         aero_tr_slb,gn_aerochem,                                   &
+                         aero_diags,gn_aerodiags,                                   &
+                         tt,hu,psfc,sig,ZHGHT,surfwd,                               &
+                         fws,fmodv,flwc,sst,ftsoil,                                 &
+                         ice,snow,par,chem_land,gn_luc,grdz,ftv,deglat,deglon,      &
+                         sza,csza,grcld_ck,grcld_cs,qr,tnd,                         &
+                         chem_date_curr,fkt,fhs,uu,vv,F_busvol(kcl),PRETROW,        &     !  KCL -  1ST LEVEL IN THE PBL 
+                         tcld,grrain_rt,grcld_fn,qr3,                               &
+                         rhet_n2o5,rhet_hmhp,gas_emis_SO4,                          &
+                         emis_mr_so4,emis_mr_bc,emis_mr_oc,F_chmbusper(geia),F_chmbusper(soil))  
+!
+!      write(*,*) 'ac_aerocam-returned from aero_chem_cam' 
+!      call flush(6)
+!
+      call aod_calculate(aero_tr_slb, tt, pres, hu, grdz, &
+                         F_chmbusper(ss50),F_chmbusper(sf50),F_chmbusper(bc50),F_chmbusper(oc50),F_chmbusper(sd50),F_chmbusper(t500),F_chmbusper(e500), &
+                         F_chmbusper(ss55),F_chmbusper(sf55),F_chmbusper(bc55),F_chmbusper(oc55),F_chmbusper(sd55),F_chmbusper(t550),F_chmbusper(e550), F_chm_ni,nk)
+
+      call aero_unload_tracers(aero_tr_slb,                     &
+                              F_chmbusdyn,                      &
+                              F_chmbusper,                      &
+                              F_busdyn(huplus),                 &  ! SPECIFIC HUMIDITY AT T+DT
+                              F_chm_bdyn_siz,F_chm_bper_siz,    &
+                              F_chm_ni,nk,                      &
+                              gas_tr_SO2,gas_tr_NO3,gas_tr_OH,gas_tr_O3,gas_tr_H2O2,gas_tr_HNO3)
+!
+
+      call aero_cam_diag (aero_tr_slb,F_chmbusper,F_chm_bper_siz,F_chm_ni,nk)
+
+!
+!      write(*,*) 'ac_aerocam-  exit' 
+!      call flush(6)
+
+      return
+  end
+
+
+  subroutine  aero_scale(aero_tr_slb,F_chm_ni,nk,gn_aerochem)
+
+  integer F_chm_ni,nk,gn_aerochem
+  real aero_tr_slb(F_chm_ni,nk,gn_aerochem)
+  integer i,k,ia,k62
+
+	write(*,*) 'ac_aerocam.ftn90: aerosols x5 - 1-62 positions'
+
+   call flush (6)    
+   call abort
+
+
+  k62=62
+  do i=1,F_chm_ni
+     do k=1,nk
+	do ia=1,k62
+           aero_tr_slb(i,k,ia)=aero_tr_slb(i,k,ia)*5.0
+	end do
+     end do	
+  end do	
+!
+  return
+  end
+
+

@@ -1,0 +1,45 @@
+!
+! ########## start aero_emis_order.cdk ##########
+
+      integer gnaero_emis
+      parameter (gnaero_emis = 47) 
+
+!      integer cn_aero_emBC1,cn_aero_emBC1I,cn_aero_emBC2,cn_aero_emBC2I
+!      integer cn_aero_emBC3,cn_aero_emBC3I,cn_aero_emBC4,cn_aero_emBC4I
+!      integer cn_aero_emBC5,cn_aero_emBC5I
+!      integer cn_aero_emOM1,cn_aero_emOM1I,cn_aero_emOM2,cn_aero_emOM2I
+!      integer cn_aero_emOM3,cn_aero_emOM3I,cn_aero_emOM4,cn_aero_emOM4I
+!      integer cn_aero_emOM5,cn_aero_emOM5I
+!      integer cn_aero_emSO4L,cn_aero_emSO4H,cn_aero_emODMS,cn_aero_emLDMS
+!      integer cn_aero_emSO2L,cn_aero_emSO2H
+!      integer cn_aero_emH2S,cn_aero_emSOIL
+!
+!      parameter (cn_aero_emBC1=1)
+!      parameter (cn_aero_emBC1I=2)
+!      parameter (cn_aero_emBC2=3)
+!      parameter (cn_aero_emBC2I=4)
+!      parameter (cn_aero_emBC3=5)
+!      parameter (cn_aero_emBC3I=6)
+!      parameter (cn_aero_emBC4=7)
+!      parameter (cn_aero_emBC4I=8)
+!      parameter (cn_aero_emBC5=9)
+!      parameter (cn_aero_emBC5I=10)
+!      parameter (cn_aero_emOM1=cn_aero_emBC5I+1)
+!      parameter (cn_aero_emOM1I=cn_aero_emBC5I+2)
+!      parameter (cn_aero_emOM2=cn_aero_emBC5I+3)
+!      parameter (cn_aero_emOM2I=cn_aero_emBC5I+4)
+!      parameter (cn_aero_emOM3=cn_aero_emBC5I+5)
+!      parameter (cn_aero_emOM3I=cn_aero_emBC5I+6)
+!      parameter (cn_aero_emOM4=cn_aero_emBC5I+7)
+!      parameter (cn_aero_emOM4I=cn_aero_emBC5I+8)
+!      parameter (cn_aero_emOM5=cn_aero_emBC5I+9)
+!      parameter (cn_aero_emOM5I=cn_aero_emBC5I+10)
+!      parameter (cn_aero_emSO4H=cn_aero_emOM5I+1)
+!      parameter (cn_aero_emSO4L=cn_aero_emOM5I+2)
+!      parameter (cn_aero_emSO2H=cn_aero_emOM5I+3)
+!      parameter (cn_aero_emSO2L=cn_aero_emOM5I+4)
+!      parameter (cn_aero_emODMS=cn_aero_emSO2L+1)
+!      parameter (cn_aero_emLDMS=cn_aero_emSO2L+2)
+!      parameter (cn_aero_emH2S=cn_aero_emLDMS+1)
+!      parameter (cn_aero_emSOIL=cn_aero_emH2S+1)
+!

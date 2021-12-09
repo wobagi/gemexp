@@ -1,0 +1,95 @@
+c--------------------------------------------------------------------------
+      subroutine ac_diag_jval(rjdiag,rj,ni,njval,nk,klevel,jval)
+c--------------------------------------------------------------------------
+#include "impnone.cdk"
+c
+      integer ni,njval,nk,klevel,jval
+      integer i
+c
+      real rj(ni,njval),rjdiag(ni,nk)
+c
+c--------------------------------------------------------------------------
+c     assign slected J-value into RJDIAG
+c
+      do i=1,ni
+         rjdiag(i,klevel)  = rj(i,jval)
+      end do 
+c--------------------------------------------------------------------------
+      return
+      end
+c--------------------------------------------------------------------------
+      subroutine ac_diag_rk(rkdiag,rk,ni,nrk,nk,klevel,irk)
+c--------------------------------------------------------------------------
+#include "impnone.cdk"
+c
+      integer ni,nrk,nk,klevel,irk
+      integer i
+c
+      real rk(ni,nrk),rkdiag(ni,nk)
+c
+c--------------------------------------------------------------------------
+c     assign slected k rate into RKDIAG
+c
+      do i=1,ni
+         rkdiag(i,klevel)  = rk(i,irk)
+      end do 
+c--------------------------------------------------------------------------
+      return
+      end
+c--------------------------------------------------------------------------
+      subroutine ac_diag_vflux(flux,tracer,fws,ftv,pres,tnd,ni,nk)
+c--------------------------------------------------------------------------
+
+#include "impnone.cdk"
+#include "consphy.cdk"
+
+      integer ni,nk,i,k
+      real flux(ni,nk),tracer(ni,nk),fws(ni,nk),pres(ni,nk)
+      real ftv(ni,nk),tnd(ni,nk)
+      real const
+c--------------------------------------------------------------------------
+c
+      const=RGASD/GRAV * 100   ! 100 is to convert m to cm
+c
+      do k=1,nk-1
+         do i=1,ni
+            flux(i,k)= -fws(i,k)/pres(i,k)*ftv(i,k)*const*tracer(i,k)*tnd(i,k) ! [molec / cm^2 / s]
+         end do
+      end do
+c--------------------------------------------------------------------------
+      return
+      end
+c--------------------------------------------------------------------------
+      subroutine ac_diag_save_slab(a,adiag,ni,nk)
+c--------------------------------------------------------------------------
+#include "impnone.cdk"
+
+      integer ni,nk
+      real a(ni,nk),adiag(ni,nk)
+c--------------------------------------------------------------------------
+c
+      adiag=a
+c
+c--------------------------------------------------------------------------
+      return
+      end
+c--------------------------------------------------------------------------
+      subroutine ac_diag_delta(a,adiag,ni,nk,iflag)
+c--------------------------------------------------------------------------
+#include "impnone.cdk"
+
+      integer ni,nk,iflag
+      real a(ni,nk),adiag(ni,nk)
+c--------------------------------------------------------------------------
+      if(iflag.eq.1) then
+         adiag=a
+      else if(iflag.eq.2) then
+         adiag=a-adiag  ! new-old
+      else 
+        write(*,*) 'wrong flag for aq_diag_delta:', iflag
+        call flush(6)
+	call abort
+      end if
+c--------------------------------------------------------------------------
+      return
+      end

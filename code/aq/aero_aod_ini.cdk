@@ -1,0 +1,24 @@
+!
+!  start: aero_aod_ini.cdk
+!
+! *----------------------------------------------------------------------
+! * aod 
+! *----------------------------------------------------------------------
+!
+     call chm_gesdict (n, nk, SS50, 'VN=SS50;  ON=SS50;  VD=SS50-AOD    ;VS=slb  ; VB=p1')
+     call chm_gesdict (n, nk, SF50, 'VN=SF50;  ON=SF50;  VD=SF50-AOD    ;VS=slb  ; VB=p1')
+     call chm_gesdict (n, nk, BC50, 'VN=BC50;  ON=BC50;  VD=BC50-AOD    ;VS=slb  ; VB=p1')
+     call chm_gesdict (n, nk, OC50, 'VN=OC50;  ON=OC50;  VD=OC50-AOD    ;VS=slb  ; VB=p1')
+     call chm_gesdict (n, nk, SD50, 'VN=SD50;  ON=SD50;  VD=SD50-AOD    ;VS=slb  ; VB=p1')
+     call chm_gesdict (n, nk, T500, 'VN=T500;  ON=T500;  VD=T500-AOD    ;VS=slb  ; VB=p1')
+     call chm_gesdict (n, nk, E500, 'VN=E500;  ON=E500;  VD=E500-AOD    ;VS=slb  ; VB=p1')
+!
+     call chm_gesdict (n, nk, SS55, 'VN=SS55;  ON=SS55;  VD=SS55-AOD    ;VS=slb  ; VB=p1')
+     call chm_gesdict (n, nk, SF55, 'VN=SF55;  ON=SF55;  VD=SF55-AOD    ;VS=slb  ; VB=p1')
+     call chm_gesdict (n, nk, BC55, 'VN=BC55;  ON=BC55;  VD=BC55-AOD    ;VS=slb  ; VB=p1')
+     call chm_gesdict (n, nk, OC55, 'VN=OC55;  ON=OC55;  VD=OC55-AOD    ;VS=slb  ; VB=p1')
+     call chm_gesdict (n, nk, SD55, 'VN=SD55;  ON=SD55;  VD=SD55-AOD    ;VS=slb  ; VB=p1')
+     call chm_gesdict (n, nk, T550, 'VN=T550;  ON=T550;  VD=T550-AOD    ;VS=slb  ; VB=p1')
+     call chm_gesdict (n, nk, E550, 'VN=E550;  ON=E550;  VD=E550-AOD    ;VS=slb  ; VB=p1')
+!
+! end of aero_aod_ini.cdk

@@ -1,0 +1,267 @@
+      subroutine aero_load_tracers (aero_tr_slb,F_chmbusdyn,F_chmbusper,hu,
+     &                              F_chm_bdyn_siz,F_chm_bper_siz,ni,nk,
+     &      gas_tr_SO2,gas_tr_NO3,gas_tr_OH,gas_tr_O3,gas_tr_H2O2,gas_tr_HNO3)
+c
+#include "impnone.cdk"
+#include "aero_chem_order_cam.cdk"
+#include "chm_macros_f.h"
+#include "chm_bus.cdk"
+c
+      integer F_chm_bdyn_siz,F_chm_bper_siz
+      integer ni,nk
+c
+      real aero_tr_slb(ni,nk,gn_aerochem)
+      real F_chmbusdyn(F_chm_bdyn_siz)
+      real F_chmbusper(F_chm_bper_siz)
+      real hu(ni,nk)
+c
+      real gas_tr_SO2(ni,nk)
+      real gas_tr_NO3(ni,nk)
+      real gas_tr_OH(ni,nk)
+      real gas_tr_O3(ni,nk)
+      real gas_tr_H2O2(ni,nk)
+      real gas_tr_HNO3(ni,nk)
+c
+      integer i,k,ik
+c 
+      real, parameter :: tr_min=1.0E-30  ! minimum mixing ratio  
+c--------------------------------------------------------------------------------
+c
+!     max(tr_min, MR_value) will force mixing ratio to be > 1.e-30
+!
+      do k=1,nk
+         do i=1,ni
+!
+            ik = (k-1)*ni + i - 1
+!
+            aero_tr_slb(i,k, cncaSS1  ) = max(tr_min, F_chmbusdyn( sslt01  + ik))  !   
+            aero_tr_slb(i,k, cncaSS2  ) = max(tr_min, F_chmbusdyn( sslt02  + ik))  !   
+            aero_tr_slb(i,k, cncaSS3  ) = max(tr_min, F_chmbusdyn( sslt03  + ik))  !   
+            aero_tr_slb(i,k, cncaSS4  ) = max(tr_min, F_chmbusdyn( sslt04  + ik))  !   
+            aero_tr_slb(i,k, cncaSS5  ) = max(tr_min, F_chmbusdyn( sslt05  + ik))  !   
+            aero_tr_slb(i,k, cncaSS6  ) = max(tr_min, F_chmbusdyn( sslt06  + ik))  !   
+            aero_tr_slb(i,k, cncaSS7  ) = max(tr_min, F_chmbusdyn( sslt07  + ik))  !   
+            aero_tr_slb(i,k, cncaSS8  ) = max(tr_min, F_chmbusdyn( sslt08  + ik))  !   
+            aero_tr_slb(i,k, cncaSS9  ) = max(tr_min, F_chmbusdyn( sslt09  + ik))  !   
+            aero_tr_slb(i,k, cncaSS10 ) = max(tr_min, F_chmbusdyn( sslt10  + ik))  !   
+            aero_tr_slb(i,k, cncaSS11 ) = max(tr_min, F_chmbusdyn( sslt11  + ik))  !   
+            aero_tr_slb(i,k, cncaSS12 ) = max(tr_min, F_chmbusdyn( sslt12  + ik))  !   
+!
+            aero_tr_slb(i,k, cncaSF1  ) = max(tr_min, F_chmbusdyn( sf01  + ik))  !   
+            aero_tr_slb(i,k, cncaSF2  ) = max(tr_min, F_chmbusdyn( sf02  + ik))  !   
+            aero_tr_slb(i,k, cncaSF3  ) = max(tr_min, F_chmbusdyn( sf03  + ik))  !   
+            aero_tr_slb(i,k, cncaSF4  ) = max(tr_min, F_chmbusdyn( sf04  + ik))  !   
+            aero_tr_slb(i,k, cncaSF5  ) = max(tr_min, F_chmbusdyn( sf05  + ik))  !   
+            aero_tr_slb(i,k, cncaSF6  ) = max(tr_min, F_chmbusdyn( sf06  + ik))  !   
+            aero_tr_slb(i,k, cncaSF7  ) = max(tr_min, F_chmbusdyn( sf07  + ik))  !   
+            aero_tr_slb(i,k, cncaSF8  ) = max(tr_min, F_chmbusdyn( sf08  + ik))  !   
+            aero_tr_slb(i,k, cncaSF9  ) = max(tr_min, F_chmbusdyn( sf09  + ik))  !   
+            aero_tr_slb(i,k, cncaSF10 ) = max(tr_min, F_chmbusdyn( sf10  + ik))  !   
+            aero_tr_slb(i,k, cncaSF11 ) = max(tr_min, F_chmbusdyn( sf11  + ik))  !   
+            aero_tr_slb(i,k, cncaSF12 ) = max(tr_min, F_chmbusdyn( sf12  + ik))  !   
+!
+            aero_tr_slb(i,k, cncaBC1  ) = max(tr_min, F_chmbusdyn( bc01  + ik))  !   
+            aero_tr_slb(i,k, cncaBC2  ) = max(tr_min, F_chmbusdyn( bc02  + ik))  !   
+            aero_tr_slb(i,k, cncaBC3  ) = max(tr_min, F_chmbusdyn( bc03  + ik))  !   
+            aero_tr_slb(i,k, cncaBC4  ) = max(tr_min, F_chmbusdyn( bc04  + ik))  !   
+            aero_tr_slb(i,k, cncaBC5  ) = max(tr_min, F_chmbusdyn( bc05  + ik))  !   
+            aero_tr_slb(i,k, cncaBC6  ) = max(tr_min, F_chmbusdyn( bc06  + ik))  !   
+            aero_tr_slb(i,k, cncaBC7  ) = max(tr_min, F_chmbusdyn( bc07  + ik))  !   
+            aero_tr_slb(i,k, cncaBC8  ) = max(tr_min, F_chmbusdyn( bc08  + ik))  !   
+            aero_tr_slb(i,k, cncaBC9  ) = max(tr_min, F_chmbusdyn( bc09  + ik))  !   
+            aero_tr_slb(i,k, cncaBC10 ) = max(tr_min, F_chmbusdyn( bc10  + ik))  !   
+            aero_tr_slb(i,k, cncaBC11 ) = max(tr_min, F_chmbusdyn( bc11  + ik))  !   
+            aero_tr_slb(i,k, cncaBC12 ) = max(tr_min, F_chmbusdyn( bc12  + ik))  !   
+!
+            aero_tr_slb(i,k, cncaOC1  ) = max(tr_min, F_chmbusdyn( oc01  + ik))  !   
+            aero_tr_slb(i,k, cncaOC2  ) = max(tr_min, F_chmbusdyn( oc02  + ik))  !   
+            aero_tr_slb(i,k, cncaOC3  ) = max(tr_min, F_chmbusdyn( oc03  + ik))  !   
+            aero_tr_slb(i,k, cncaOC4  ) = max(tr_min, F_chmbusdyn( oc04  + ik))  !   
+            aero_tr_slb(i,k, cncaOC5  ) = max(tr_min, F_chmbusdyn( oc05  + ik))  !   
+            aero_tr_slb(i,k, cncaOC6  ) = max(tr_min, F_chmbusdyn( oc06  + ik))  !   
+            aero_tr_slb(i,k, cncaOC7  ) = max(tr_min, F_chmbusdyn( oc07  + ik))  !   
+            aero_tr_slb(i,k, cncaOC8  ) = max(tr_min, F_chmbusdyn( oc08  + ik))  !   
+            aero_tr_slb(i,k, cncaOC9  ) = max(tr_min, F_chmbusdyn( oc09  + ik))  !   
+            aero_tr_slb(i,k, cncaOC10 ) = max(tr_min, F_chmbusdyn( oc10  + ik))  !   
+            aero_tr_slb(i,k, cncaOC11 ) = max(tr_min, F_chmbusdyn( oc11  + ik))  !   
+            aero_tr_slb(i,k, cncaOC12 ) = max(tr_min, F_chmbusdyn( oc12  + ik))  !   
+!
+            aero_tr_slb(i,k, cncaSD1  ) = max(tr_min, F_chmbusdyn( sd01  + ik))  !   
+            aero_tr_slb(i,k, cncaSD2  ) = max(tr_min, F_chmbusdyn( sd02  + ik))  !   
+            aero_tr_slb(i,k, cncaSD3  ) = max(tr_min, F_chmbusdyn( sd03  + ik))  !   
+            aero_tr_slb(i,k, cncaSD4  ) = max(tr_min, F_chmbusdyn( sd04  + ik))  !   
+            aero_tr_slb(i,k, cncaSD5  ) = max(tr_min, F_chmbusdyn( sd05  + ik))  !   
+            aero_tr_slb(i,k, cncaSD6  ) = max(tr_min, F_chmbusdyn( sd06  + ik))  !   
+            aero_tr_slb(i,k, cncaSD7  ) = max(tr_min, F_chmbusdyn( sd07  + ik))  !   
+            aero_tr_slb(i,k, cncaSD8  ) = max(tr_min, F_chmbusdyn( sd08  + ik))  !   
+            aero_tr_slb(i,k, cncaSD9  ) = max(tr_min, F_chmbusdyn( sd09  + ik))  !   
+            aero_tr_slb(i,k, cncaSD10 ) = max(tr_min, F_chmbusdyn( sd10  + ik))  !   
+            aero_tr_slb(i,k, cncaSD11 ) = max(tr_min, F_chmbusdyn( sd11  + ik))  !   
+            aero_tr_slb(i,k, cncaSD12 ) = max(tr_min, F_chmbusdyn( sd12  + ik))  !   
+!
+            aero_tr_slb(i,k, cncaDMS ) = max(tr_min, F_chmbusdyn( adms  + ik))  !   
+            aero_tr_slb(i,k, cncaH2S ) = max(tr_min, F_chmbusdyn( ah2s  + ik))  !   
+!
+!  some stuff here may not be required at all !!
+!
+            aero_tr_slb(i,k, cncaCO2 ) =  0.0 !max(tr_min, F_chmbusper( aco2  + ik))  !   
+            aero_tr_slb(i,k, cncaNH3 ) =  0.0 !max(tr_min, F_chmbusper( anh3  + ik))  !   
+            aero_tr_slb(i,k, cncaSO4 ) =  0.0 !max(tr_min, F_chmbusper( aso4  + ik))  !   total SO4
+            aero_tr_slb(i,k, cncaCCN ) =  0.0 !max(tr_min, F_chmbusper( accn  + ik))  !   
+            aero_tr_slb(i,k, cncaLWC ) =  0.0 !max(tr_min, F_chmbusper( alwc  + ik))  !   
+            aero_tr_slb(i,k, cncaIWC ) =  0.0 !max(tr_min, F_chmbusper( aiwc  + ik))  !   
+            aero_tr_slb(i,k, cncaCLF ) =  0.0 !max(tr_min, F_chmbusper( aclf  + ik))  !   
+!
+            aero_tr_slb(i,k,cncaSO2)  = gas_tr_SO2(i,k)* 64./28.97
+!
+!           verify units .... gas_tr is in VOLUME mixing ratio
+!
+!                             aerosols are in MASS mixing ratio
+!
+            aero_tr_slb(i,k,cncaNO3)  = gas_tr_NO3(i,k)
+            aero_tr_slb(i,k,cncaOH)   = gas_tr_OH(i,k)
+            aero_tr_slb(i,k,cncaO3)   = gas_tr_O3(i,k)
+            aero_tr_slb(i,k,cncaH2O2) = gas_tr_H2O2(i,k)
+            aero_tr_slb(i,k,cncaHNO3) = gas_tr_HNO3(i,k)
+!
+         end do
+      end do
+c--------------------------------------------------------------------------------
+      return
+      end
+!
+      subroutine aero_unload_tracers (aero_tr_slb,F_chmbusdyn,F_chmbusper,hu,
+     &                                F_chm_bdyn_siz,F_chm_bper_siz,ni,nk,
+     &      gas_tr_SO2,gas_tr_NO3,gas_tr_OH,gas_tr_O3,gas_tr_H2O2,gas_tr_HNO3)
+c
+
+#include "impnone.cdk"
+#include "aero_chem_order_cam.cdk"
+#include "chm_macros_f.h"
+#include "chm_bus.cdk"
+c
+      integer F_chm_bdyn_siz,F_chm_bper_siz
+      integer ni,nk
+c
+      real aero_tr_slb(ni,nk,gn_aerochem)
+      real F_chmbusdyn(F_chm_bdyn_siz)
+      real F_chmbusper(F_chm_bper_siz)
+      real hu(ni,nk)
+c
+      real gas_tr_SO2(ni,nk)
+      real gas_tr_NO3(ni,nk)
+      real gas_tr_OH(ni,nk)
+      real gas_tr_O3(ni,nk)
+      real gas_tr_H2O2(ni,nk)
+      real gas_tr_HNO3(ni,nk)
+c
+      integer i,k,ik
+c 
+      real, parameter :: tr_min=1.0E-30  ! minimum mixing ratio  
+
+c--------------------------------------------------------------------------------
+c
+!     max(tr_min, MR_value) will force mixing ratio to be > 1.e-30
+!
+      do k=1,nk
+         do i=1,ni
+!
+            ik = (k-1)*ni + i - 1
+!
+            F_chmbusdyn( sslt01  +ik) = max(tr_min, aero_tr_slb(i,k,cncaSS1  ))  ! 
+            F_chmbusdyn( sslt02  +ik) = max(tr_min, aero_tr_slb(i,k,cncaSS2  ))  ! 
+            F_chmbusdyn( sslt03  +ik) = max(tr_min, aero_tr_slb(i,k,cncaSS3  ))  ! 
+            F_chmbusdyn( sslt04  +ik) = max(tr_min, aero_tr_slb(i,k,cncaSS4  ))  ! 
+            F_chmbusdyn( sslt05  +ik) = max(tr_min, aero_tr_slb(i,k,cncaSS5  ))  ! 
+            F_chmbusdyn( sslt06  +ik) = max(tr_min, aero_tr_slb(i,k,cncaSS6  ))  ! 
+            F_chmbusdyn( sslt07  +ik) = max(tr_min, aero_tr_slb(i,k,cncaSS7  ))  ! 
+            F_chmbusdyn( sslt08  +ik) = max(tr_min, aero_tr_slb(i,k,cncaSS8  ))  ! 
+            F_chmbusdyn( sslt09  +ik) = max(tr_min, aero_tr_slb(i,k,cncaSS9  ))  ! 
+            F_chmbusdyn( sslt10  +ik) = max(tr_min, aero_tr_slb(i,k,cncaSS10 ))  ! 
+            F_chmbusdyn( sslt11  +ik) = max(tr_min, aero_tr_slb(i,k,cncaSS11 ))  ! 
+            F_chmbusdyn( sslt12  +ik) = max(tr_min, aero_tr_slb(i,k,cncaSS12 ))  ! 
+!
+            F_chmbusdyn( sf01  +ik) = max(tr_min, aero_tr_slb(i,k,cncaSF1  ))  ! 
+            F_chmbusdyn( sf02  +ik) = max(tr_min, aero_tr_slb(i,k,cncaSF2  ))  ! 
+            F_chmbusdyn( sf03  +ik) = max(tr_min, aero_tr_slb(i,k,cncaSF3  ))  ! 
+            F_chmbusdyn( sf04  +ik) = max(tr_min, aero_tr_slb(i,k,cncaSF4  ))  ! 
+            F_chmbusdyn( sf05  +ik) = max(tr_min, aero_tr_slb(i,k,cncaSF5  ))  ! 
+            F_chmbusdyn( sf06  +ik) = max(tr_min, aero_tr_slb(i,k,cncaSF6  ))  ! 
+            F_chmbusdyn( sf07  +ik) = max(tr_min, aero_tr_slb(i,k,cncaSF7  ))  ! 
+            F_chmbusdyn( sf08  +ik) = max(tr_min, aero_tr_slb(i,k,cncaSF8  ))  ! 
+            F_chmbusdyn( sf09  +ik) = max(tr_min, aero_tr_slb(i,k,cncaSF9  ))  ! 
+            F_chmbusdyn( sf10  +ik) = max(tr_min, aero_tr_slb(i,k,cncaSF10 ))  ! 
+            F_chmbusdyn( sf11  +ik) = max(tr_min, aero_tr_slb(i,k,cncaSF11 ))  ! 
+            F_chmbusdyn( sf12  +ik) = max(tr_min, aero_tr_slb(i,k,cncaSF12 ))  ! 
+!
+            F_chmbusdyn( bc01  +ik) = max(tr_min, aero_tr_slb(i,k,cncaBC1  ))  ! 
+            F_chmbusdyn( bc02  +ik) = max(tr_min, aero_tr_slb(i,k,cncaBC2  ))  ! 
+            F_chmbusdyn( bc03  +ik) = max(tr_min, aero_tr_slb(i,k,cncaBC3  ))  ! 
+            F_chmbusdyn( bc04  +ik) = max(tr_min, aero_tr_slb(i,k,cncaBC4  ))  ! 
+            F_chmbusdyn( bc05  +ik) = max(tr_min, aero_tr_slb(i,k,cncaBC5  ))  ! 
+            F_chmbusdyn( bc06  +ik) = max(tr_min, aero_tr_slb(i,k,cncaBC6  ))  ! 
+            F_chmbusdyn( bc07  +ik) = max(tr_min, aero_tr_slb(i,k,cncaBC7  ))  ! 
+            F_chmbusdyn( bc08  +ik) = max(tr_min, aero_tr_slb(i,k,cncaBC8  ))  ! 
+            F_chmbusdyn( bc09  +ik) = max(tr_min, aero_tr_slb(i,k,cncaBC9  ))  ! 
+            F_chmbusdyn( bc10  +ik) = max(tr_min, aero_tr_slb(i,k,cncaBC10 ))  ! 
+            F_chmbusdyn( bc11  +ik) = max(tr_min, aero_tr_slb(i,k,cncaBC11 ))  ! 
+            F_chmbusdyn( bc12  +ik) = max(tr_min, aero_tr_slb(i,k,cncaBC12 ))  ! 
+!
+            F_chmbusdyn( oc01  +ik) = max(tr_min, aero_tr_slb(i,k,cncaOC1  ))  ! 
+            F_chmbusdyn( oc02  +ik) = max(tr_min, aero_tr_slb(i,k,cncaOC2  ))  ! 
+            F_chmbusdyn( oc03  +ik) = max(tr_min, aero_tr_slb(i,k,cncaOC3  ))  ! 
+            F_chmbusdyn( oc04  +ik) = max(tr_min, aero_tr_slb(i,k,cncaOC4  ))  ! 
+            F_chmbusdyn( oc05  +ik) = max(tr_min, aero_tr_slb(i,k,cncaOC5  ))  ! 
+            F_chmbusdyn( oc06  +ik) = max(tr_min, aero_tr_slb(i,k,cncaOC6  ))  ! 
+            F_chmbusdyn( oc07  +ik) = max(tr_min, aero_tr_slb(i,k,cncaOC7  ))  ! 
+            F_chmbusdyn( oc08  +ik) = max(tr_min, aero_tr_slb(i,k,cncaOC8  ))  ! 
+            F_chmbusdyn( oc09  +ik) = max(tr_min, aero_tr_slb(i,k,cncaOC9  ))  ! 
+            F_chmbusdyn( oc10  +ik) = max(tr_min, aero_tr_slb(i,k,cncaOC10 ))  ! 
+            F_chmbusdyn( oc11  +ik) = max(tr_min, aero_tr_slb(i,k,cncaOC11 ))  ! 
+            F_chmbusdyn( oc12  +ik) = max(tr_min, aero_tr_slb(i,k,cncaOC12 ))  ! 
+!
+            F_chmbusdyn( sd01  +ik) = max(tr_min, aero_tr_slb(i,k,cncaSD1  ))  ! 
+            F_chmbusdyn( sd02  +ik) = max(tr_min, aero_tr_slb(i,k,cncaSD2  ))  ! 
+            F_chmbusdyn( sd03  +ik) = max(tr_min, aero_tr_slb(i,k,cncaSD3  ))  ! 
+            F_chmbusdyn( sd04  +ik) = max(tr_min, aero_tr_slb(i,k,cncaSD4  ))  ! 
+            F_chmbusdyn( sd05  +ik) = max(tr_min, aero_tr_slb(i,k,cncaSD5  ))  ! 
+            F_chmbusdyn( sd06  +ik) = max(tr_min, aero_tr_slb(i,k,cncaSD6  ))  ! 
+            F_chmbusdyn( sd07  +ik) = max(tr_min, aero_tr_slb(i,k,cncaSD7  ))  ! 
+            F_chmbusdyn( sd08  +ik) = max(tr_min, aero_tr_slb(i,k,cncaSD8  ))  ! 
+            F_chmbusdyn( sd09  +ik) = max(tr_min, aero_tr_slb(i,k,cncaSD9  ))  ! 
+            F_chmbusdyn( sd10  +ik) = max(tr_min, aero_tr_slb(i,k,cncaSD10 ))  ! 
+            F_chmbusdyn( sd11  +ik) = max(tr_min, aero_tr_slb(i,k,cncaSD11 ))  ! 
+            F_chmbusdyn( sd12  +ik) = max(tr_min, aero_tr_slb(i,k,cncaSD12 ))  ! 
+
+            F_chmbusdyn( adms  +ik) = max(tr_min, aero_tr_slb(i,k, cncaDMS ))
+            F_chmbusdyn( ah2s  +ik) = max(tr_min, aero_tr_slb(i,k, cncaH2S ))
+!
+!  some stuff here may not be required at all !!
+!
+!            F_chmbusper( aco2  +ik) = max(tr_min, aero_tr_slb(i,k, cncaCO2 ))
+!            F_chmbusper( anh3  +ik) = max(tr_min, aero_tr_slb(i,k, cncaNH3 ))
+!            F_chmbusper( aso4  +ik) = max(tr_min, aero_tr_slb(i,k, cncaSO4 ))    ! total SO4
+!            F_chmbusper( accn  +ik) = max(tr_min, aero_tr_slb(i,k, cncaCCN ))
+!            F_chmbusper( alwc  +ik) = max(tr_min, aero_tr_slb(i,k, cncaLWC ))
+!            F_chmbusper( aiwc  +ik) = max(tr_min, aero_tr_slb(i,k, cncaIWC ))
+!            F_chmbusper( aclf  +ik) = max(tr_min, aero_tr_slb(i,k, cncaCLF ))
+!
+            gas_tr_SO2(i,k) = aero_tr_slb(i,k,cncaSO2)* 28.97/64.0
+!
+!           verify units .... gas_tr is in VOLUME mixing ratio
+!
+!                             aerosols are in MASS mixing ratio
+!
+!  ... will activate later 
+!
+!            gas_tr_NO3(i,k)  = aero_tr_slb(i,k,cncaNO3)  
+!            gas_tr_OH(i,k)   = aero_tr_slb(i,k,cncaOH)   
+!            gas_tr_O3(i,k)   = aero_tr_slb(i,k,cncaO3)   
+!            gas_tr_H2O2(i,k) = aero_tr_slb(i,k,cncaH2O2) 
+!            gas_tr_HNO3(i,k) = aero_tr_slb(i,k,cncaHNO3) 
+!
+         end do
+      end do
+c--------------------------------------------------------------------------------
+      return
+      end

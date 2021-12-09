@@ -1,0 +1,16 @@
+      character*4 NAME0(12), NAME1(12)
+      character*4 NAME4(13), NAME5(13)
+
+      DATA NAME0 /'OD01', 'OD02', 'OD03',  'OD04', 'OD05', 'OD06', &
+                  'OD07', 'OD08', 'OD09',  'OD10', 'OD11', 'OD12'/
+      DATA NAME1 /'ODM1', 'H2S1', 'LDM1',&
+                'ODM2', 'H2S2', 'LDM2',&
+                'ODM3', 'H2S3', 'LDM3',&
+                'ODM4', 'H2S4', 'LDM4'/
+
+      DATA NAME4 /'BC01', 'BC02', 'BC03',  'BC04', 'BC05', 'BC06',&
+                 'BC07', 'BC08', 'BC09',  'BC10', 'BC11', 'BC12',  &
+                 'BC13'/
+      DATA NAME5 /'OM01', 'OM02', 'OM03',  'OM04', 'OM05', 'OM06',&
+                 'OM07', 'OM08', 'OM09',  'OM10', 'OM11', 'OM12',  &
+                 'OM13'/

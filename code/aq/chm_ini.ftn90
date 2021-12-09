@@ -1,0 +1,61 @@
+!
+!
+!  May 26, 2008 -- modified for gem-aq
+!
+!
+!=============================================================================
+! Environnement Canada
+! Centre Meteorologique Canadian
+! 2100 Trans-Canadienne
+! Dorval, Quebec
+!
+! Projet    : GEM-MACH
+! Fichier   : chm_ini.ftn90
+! Creation  : A. Kallaur (March 2005)
+! Description: Initialize chemistry buses
+!
+! Remarques: this subroutine is based on the original
+!            subroutine "phy_ini", written by M. Desgagne (Oct 1995)
+!            As chemistry packages are added, new
+!            species will be introduced, but initialization will
+!            will always set ALL the species, regardless of the
+!            chemical scheme.
+!
+! Arguments: IN
+!              n  -> horizontal dimension
+!              nk -> vertical dimension
+!
+!==============================================================================
+
+subroutine chm_ini (n,nk)
+
+   implicit none
+
+#define DCLCHAR
+#include "chm_macros_f.h"
+#include "chm_bus.cdk"
+!
+   integer n,nk
+!
+#include "cc_nml_vars.cdk"
+!
+   if(GAS_chem_S.eq.'ADOM_CAM') then 
+#include "aq_chm_ini.cdk"
+#include "pt2mx_chm_ini.cdk"
+   end if
+! 
+  if(GAS_chem_S.eq.'ADOM_CAM'.and.GAS_lam_ic_file_S.NE.'NIL') then  
+#include "aq_chm_lam_ini.cdk"
+   end if
+
+   if(AEROSOL_model.eq.'CAM') then 
+#include "aero_cam_chm_ini.cdk"
+#include "aero_aod_ini.cdk"
+   end if
+  if(AEROSOL_model.eq.'CAM'.and.GAS_lam_ic_file_S.NE.'NIL') then
+#include "aero_chm_lam_ini.cdk"
+   end if
+!
+
+   return
+end

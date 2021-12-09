@@ -1,0 +1,235 @@
+#include <model_macros_f.h>
+#include "phy_macros_f.h"
+
+      subroutine aero_chem_conv(psfc,tt,hu,
+     $                          frdt,ni,nk,trnch,kount,
+     &                          NTRAC,ITRAC,XROW,uu,vv,PBLTROW,
+     &                          UTENDGW,VTENDGW,IL1,IL2,MSG,
+     &                          SHJ,SHTJ,DSHJ,ISO2,ISO4,IHPO,
+     &                          DZ,PRETROW,TFROW,
+     &                          mu,eu,du,md,mc,ed,dp_gem,mb,eps0,zfg,dsubcld,
+     &                          ideep,jt,maxg,jd,lengath)
+c
+
+!!     &                          NTRAC,ITRAC,XROW,UROW,VROW,PBLTROW,  ! wrong array was passed to CONV6X 
+
+#include "impnone.cdk"
+
+      integer ni,nk,trnch,kount
+      integer i,k,n
+      INTEGER IL1,IL2,ILG,ILEV,NTRAC,MSG,ISO2,ISO4,IHPO
+      INTEGER JLATPR,NUPS,ITRAC,IRAD,ik1
+
+      real frdt
+
+      integer ITRPHS(NTRAC)
+
+      real tt(ni,nk) 
+      real hu(ni,nk)
+
+      real uu(ni,nk)
+      real vv(ni,nk)
+!
+      real psfc(ni)
+!
+      REAL XROW(ni,nk,NTRAC)
+!
+      REAL TFROW (ni,nk)
+      REAL SHTJ  (ni,nk)
+!
+      REAL UROW    (ni,nk-1)
+      REAL VROW    (ni,nk-1)
+      REAL DSHJ    (ni,nk-1)
+      REAL SHJ     (ni,nk-1)
+      REAL UTENDGW (ni,nk-1)
+      REAL VTENDGW (ni,nk-1)
+      REAL DZ      (ni,nk-1) 
+
+      REAL PRETROW (ni,nk-1,2)
+
+      REAL PBLTROW(ni)
+!
+#include "chem_conv_point.cdk"
+
+      REAL THROW(NI,NK)
+
+      REAL SHXKJ (NI,NK-1)
+      REAL DQLDT (NI,nk-1)
+      REAL DQLDTG(NI,nk-1)
+
+      REAL ZCLFROW(NI,(nk-1),2)
+      REAL ZLWCROW(NI,(nk-1),2)
+
+      REAL GTROW(NI)
+      REAL TCVROW(NI)
+      REAL WRK(IDSZ)
+      REAL VA(IVA)
+
+!---------------------------
+c      
+!
+       real zfg(ni,nk)
+!
+       real zm(ni,nk-1)
+       real mu(ni,nk-1)
+       real eu(ni,nk-1)
+       real du(ni,nk-1)
+       real md(ni,nk-1)
+       real mc(ni,nk-1)
+       real ed(ni,nk-1)
+       real dp_gem(ni,nk-1)
+
+       real mb(ni)
+       real eps0(ni)
+       real dsubcld(ni)
+
+       integer ideep(ni)
+       integer jt(ni)
+       integer maxg(ni)
+       integer jd(ni)
+       integer lengath
+
+!--------------------------
+
+#include "cam_cons.cdk"
+
+      REAL GRAV
+      REAL MAXC,CO2,SIG1,CDAY,X10E,RGRAV
+      COMMON /LWCONS/ MAXC,CO2,SIG1,CDAY,X10E,RGRAV
+
+!       WRITE(*,*) 'aero_chem_conv.ftn -0'
+!       CALL  flush(6)
+
+      GRAV = G
+      ILG = ni
+      ILEV = nk-1
+
+!       WRITE(*,*) 'aero_chem_conv.ftn -0a'
+!       CALL  flush(6)
+
+C   --------------------------------------------
+      call chem_setreal(THROW,0.,NI*NK)
+      call chem_setreal(GTROW,0.,ni)
+      call chem_setreal(SHXKJ,0.,ni*(nk-1))
+      call chem_setreal(TCVROW,0.,ni)
+      call chem_setreal(VA,0.,(IVA))
+      call chem_setreal(WRK,0.,(IDSZ))
+      call chem_setreal(ZCLFROW,0.,NI*(NK-1)*2) 
+      call chem_setreal(ZLWCROW,0.,NI*(NK-1)*2) 
+      call chem_setreal(DQLDT,0.,NI*(NK-1)) 
+      call chem_setreal(DQLDTG,0.,NI*(NK-1)) 
+!
+!       WRITE(*,*) 'aero_chem_conv.ftn -1'
+!       CALL  flush(6)
+
+c-----------------------------------------------
+c conv
+!!      if (GAS_conv_S.eq.'ZMF') then 
+
+        call chem_setreal(ZM,0.,ni*(nk-1))
+        call chem_setreal(DZ,0.,ni*(nk-1))
+        call chem_setreal(mu,0.,ni*(nk-1))
+        call chem_setreal(eu,0.,ni*(nk-1))
+        call chem_setreal(du,0.,ni*(nk-1))
+
+!       WRITE(*,*) 'aero_chem_conv.ftn -1a'
+!       CALL  flush(6)
+
+        call chem_setreal(md,0.,ni*(nk-1))
+        call chem_setreal(mc,0.,ni*(nk-1))
+        call chem_setreal(ed,0.,ni*(nk-1))
+        call chem_setreal(dp_gem,0.,ni*(nk-1))
+        call chem_setreal(mb,0.,ni)
+        call chem_setreal(eps0,0.,ni)
+        call chem_setreal(zfg,0.,ni*nk)
+        call chem_setreal(dsubcld,0.,ni)
+        do i=1,ni 
+           ideep(i) = 0
+           jt(i) = 0
+           maxg(i) = 0
+           jd(i) = 0
+         enddo
+C
+
+!       WRITE(*,*) 'aero_chem_conv.ftn -2'
+!       CALL  flush(6)
+
+C      -----------------------------------
+C
+C     * DEFINE SLICE OF DRY-ADIABATIC LAYER DEFINITION FOR PHYSICS.
+
+      DO 500  K=1,NK-1
+         DO 100 I=IL1,IL2
+            SHXKJ (I,K)=SHJ (I,K)**RGOCP
+  100    CONTINUE
+  500 CONTINUE
+
+       DO I=IL1,IL2
+         GTROW(I)=TT(I,nk)  
+       END DO
+       IRAD = 1
+
+!       WRITE(*,*) 'aero_chem_conv.ftn -3'
+!       CALL  flush(6)
+
+
+      CALL THCAL3B (THROW,TFROW, TT(1,2),GTROW,
+     1              SHJ,SHTJ,SHXKJ,ILEV,ILEV+1,ILG,IL1,IL2,IRAD)
+
+
+!       WRITE(*,*) 'aero_chem_conv.ftn -4'
+!       CALL  flush(6)
+
+
+      ITRPHS=0
+      
+      DO N=1,62 !!!! NTRAC                   !-----------jwk 
+         ITRPHS(N) = 1
+      END DO
+      ITRPHS(ISO2) = 0
+      ITRPHS(ISO4) = 0
+      ITRPHS(IHPO) = 0
+
+      JLATPR = 0    
+      NUPS = 0       
+
+
+!       WRITE(*,*) 'aero_chem_conv.ftn -5'
+!       CALL  flush(6)
+
+C
+      DO 501  K=1,NK-1
+         DO 101 I=IL1,IL2
+            UROW(I,K)=uu(I,K)
+            VROW(I,K)=vv(I,K)
+  101    CONTINUE
+  501 CONTINUE
+
+         CALL CONV6X(tt(1,2),hu(1,2),UROW,VROW,PRETROW(1,1,2),psfc,
+     1              TCVROW,PBLTROW,DSHJ,SHJ,SHTJ(1,2),TFROW(1,2),
+     2              UTENDGW,VTENDGW,SHTJ,XROW,ITRPHS,NTRAC,ITRAC,
+     b              ZCLFROW(1,1,2),ZLWCROW(1,1,2),EPS0,DZ,LENGATH,DQLDT,DQLDTG,
+     3              VA,IVA,ICD,nk-1,nk-1-1,nk,ni,IL1,IL2,MSG,NUPS,  
+     4              RGAS,GRAV,CPRES,frdt,trnch,JLATPR,KOUNT,
+     5              WRK(ID1 ),WRK(ID2 ),       ZM,WRK(ID4 ),WRK(ID5 ),
+     6              WRK(ID6 ),WRK(ID7 ),WRK(ID8 ),WRK(ID9 ),WRK(ID10),
+     7              WRK(ID11),WRK(ID12),WRK(ID13),WRK(ID14),WRK(ID15),
+     8                    ZFG,WRK(ID17),WRK(ID18),WRK(ID19),       MU,
+     9                     EU,WRK(ID22),WRK(ID23),       DU,       MD,
+     A                     ED,WRK(ID27),WRK(ID28),WRK(ID29),       MC,
+     B              WRK(ID31),WRK(ID32),WRK(ID33),WRK(ID34),WRK(ID35),
+     C                 DP_GEM,WRK(ID37),WRK(ID38),WRK(ID39),WRK(ID40),
+     D              WRK(ID41),WRK(ID42),WRK(ID43),WRK(ID44),WRK(ID45),
+     E              WRK(ID46),WRK(ID47),WRK(ID48),WRK(ID49),WRK(ID50),
+     F              WRK(ID51),WRK(ID52),WRK(ID53),    IDEEP,WRK(ID55),
+     G              WRK(ID56),WRK(ID57),WRK(ID58),WRK(ID59),     MAXG,
+     H              WRK(ID61),WRK(ID62),WRK(ID63),WRK(ID64),  DSUBCLD,
+     I                     MB,       JT,WRK(ID68),       JD,WRK(ID70), 
+     J              WRK(ID71),WRK(ID72),WRK(ID73),WRK(ID74),WRK(ID75),
+     K              WRK(ID76),WRK(ID77)                              ) 
+
+
+!!!! drop this conditon       endif
+c-----------------------------------------------
+      return
+      end

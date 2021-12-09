@@ -1,0 +1,164 @@
+!-----------------------------------------------------------------------------------------
+      subroutine aero_load_lam_ic(F_chmbusdyn,F_chmbusper,F_chm_bdyn_siz,F_chm_bper_siz,ni,nk)
+!-----------------------------------------------------------------------------------------
+#include "impnone.cdk"
+#include "chm_macros_f.h"
+#include "chm_bus.cdk"
+!
+      integer F_chm_bdyn_siz,F_chm_bper_siz,ni,nk
+!
+      real F_chmbusdyn(F_chm_bdyn_siz)
+      real F_chmbusper(F_chm_bper_siz)
+!-----------------------------------------------------------------------------------------
+      call ac_load_1tr(F_chmbusdyn(SSLT01) , F_chmbusper(AE01), ni,nk)
+      call ac_load_1tr(F_chmbusdyn(SSLT02) , F_chmbusper(AE02), ni,nk)
+      call ac_load_1tr(F_chmbusdyn(SSLT03) , F_chmbusper(AE03), ni,nk)
+      call ac_load_1tr(F_chmbusdyn(SSLT04) , F_chmbusper(AE04), ni,nk)
+      call ac_load_1tr(F_chmbusdyn(SSLT05) , F_chmbusper(AE05), ni,nk)
+      call ac_load_1tr(F_chmbusdyn(SSLT06) , F_chmbusper(AE06), ni,nk)
+      call ac_load_1tr(F_chmbusdyn(SSLT07) , F_chmbusper(AE07), ni,nk)
+      call ac_load_1tr(F_chmbusdyn(SSLT08) , F_chmbusper(AE08), ni,nk)
+      call ac_load_1tr(F_chmbusdyn(SSLT09) , F_chmbusper(AE09), ni,nk)
+      call ac_load_1tr(F_chmbusdyn(SSLT10) , F_chmbusper(AE10), ni,nk)
+      call ac_load_1tr(F_chmbusdyn(SSLT11) , F_chmbusper(AE11), ni,nk)
+      call ac_load_1tr(F_chmbusdyn(SSLT12) , F_chmbusper(AE12), ni,nk)
+!
+      call ac_load_1tr(F_chmbusdyn(SF01) , F_chmbusper(AE13), ni,nk)
+      call ac_load_1tr(F_chmbusdyn(SF02) , F_chmbusper(AE14), ni,nk)
+      call ac_load_1tr(F_chmbusdyn(SF03) , F_chmbusper(AE15), ni,nk)
+      call ac_load_1tr(F_chmbusdyn(SF04) , F_chmbusper(AE16), ni,nk)
+      call ac_load_1tr(F_chmbusdyn(SF05) , F_chmbusper(AE17), ni,nk)
+      call ac_load_1tr(F_chmbusdyn(SF06) , F_chmbusper(AE18), ni,nk)
+      call ac_load_1tr(F_chmbusdyn(SF07) , F_chmbusper(AE19), ni,nk)
+      call ac_load_1tr(F_chmbusdyn(SF08) , F_chmbusper(AE20), ni,nk)
+      call ac_load_1tr(F_chmbusdyn(SF09) , F_chmbusper(AE21), ni,nk)
+      call ac_load_1tr(F_chmbusdyn(SF10) , F_chmbusper(AE22), ni,nk)
+      call ac_load_1tr(F_chmbusdyn(SF11) , F_chmbusper(AE23), ni,nk)
+      call ac_load_1tr(F_chmbusdyn(SF12) , F_chmbusper(AE24), ni,nk)
+!
+      call ac_load_1tr(F_chmbusdyn(BC01) , F_chmbusper(AE25), ni,nk)
+      call ac_load_1tr(F_chmbusdyn(BC02) , F_chmbusper(AE26), ni,nk)
+      call ac_load_1tr(F_chmbusdyn(BC03) , F_chmbusper(AE27), ni,nk)
+      call ac_load_1tr(F_chmbusdyn(BC04) , F_chmbusper(AE28), ni,nk)
+      call ac_load_1tr(F_chmbusdyn(BC05) , F_chmbusper(AE29), ni,nk)
+      call ac_load_1tr(F_chmbusdyn(BC06) , F_chmbusper(AE30), ni,nk)
+      call ac_load_1tr(F_chmbusdyn(BC07) , F_chmbusper(AE31), ni,nk)
+      call ac_load_1tr(F_chmbusdyn(BC08) , F_chmbusper(AE32), ni,nk)
+      call ac_load_1tr(F_chmbusdyn(BC09) , F_chmbusper(AE33), ni,nk)
+      call ac_load_1tr(F_chmbusdyn(BC10) , F_chmbusper(AE34), ni,nk)
+      call ac_load_1tr(F_chmbusdyn(BC11) , F_chmbusper(AE35), ni,nk)
+      call ac_load_1tr(F_chmbusdyn(BC12) , F_chmbusper(AE36), ni,nk)
+!
+      call ac_load_1tr(F_chmbusdyn(OC01) , F_chmbusper(AE37), ni,nk)
+      call ac_load_1tr(F_chmbusdyn(OC02) , F_chmbusper(AE38), ni,nk)
+      call ac_load_1tr(F_chmbusdyn(OC03) , F_chmbusper(AE39), ni,nk)
+      call ac_load_1tr(F_chmbusdyn(OC04) , F_chmbusper(AE40), ni,nk)
+      call ac_load_1tr(F_chmbusdyn(OC05) , F_chmbusper(AE41), ni,nk)
+      call ac_load_1tr(F_chmbusdyn(OC06) , F_chmbusper(AE42), ni,nk)
+      call ac_load_1tr(F_chmbusdyn(OC07) , F_chmbusper(AE43), ni,nk)
+      call ac_load_1tr(F_chmbusdyn(OC08) , F_chmbusper(AE44), ni,nk)
+      call ac_load_1tr(F_chmbusdyn(OC09) , F_chmbusper(AE45), ni,nk)
+      call ac_load_1tr(F_chmbusdyn(OC10) , F_chmbusper(AE46), ni,nk)
+      call ac_load_1tr(F_chmbusdyn(OC11) , F_chmbusper(AE47), ni,nk)
+      call ac_load_1tr(F_chmbusdyn(OC12) , F_chmbusper(AE48), ni,nk)
+!
+      call ac_load_1tr(F_chmbusdyn(SD01) , F_chmbusper(AE49), ni,nk)
+      call ac_load_1tr(F_chmbusdyn(SD02) , F_chmbusper(AE50), ni,nk)
+      call ac_load_1tr(F_chmbusdyn(SD03) , F_chmbusper(AE51), ni,nk)
+      call ac_load_1tr(F_chmbusdyn(SD04) , F_chmbusper(AE52), ni,nk)
+      call ac_load_1tr(F_chmbusdyn(SD05) , F_chmbusper(AE53), ni,nk)
+      call ac_load_1tr(F_chmbusdyn(SD06) , F_chmbusper(AE54), ni,nk)
+      call ac_load_1tr(F_chmbusdyn(SD07) , F_chmbusper(AE55), ni,nk)
+      call ac_load_1tr(F_chmbusdyn(SD08) , F_chmbusper(AE56), ni,nk)
+      call ac_load_1tr(F_chmbusdyn(SD09) , F_chmbusper(AE57), ni,nk)
+      call ac_load_1tr(F_chmbusdyn(SD10) , F_chmbusper(AE58), ni,nk)
+      call ac_load_1tr(F_chmbusdyn(SD11) , F_chmbusper(AE59), ni,nk)
+      call ac_load_1tr(F_chmbusdyn(SD12) , F_chmbusper(AE60), ni,nk)
+
+      call ac_load_1tr(F_chmbusdyn(ADMS) , F_chmbusper(AE61), ni,nk)
+      call ac_load_1tr(F_chmbusdyn(AH2S) , F_chmbusper(AE62), ni,nk)
+!
+!-----------------------------------------------------------------------------------------
+      return
+      end
+!-----------------------------------------------------------------------------------------
+      subroutine aero_lam_ic(F_chmbusper,chm_bper_len)
+!-----------------------------------------------------------------------------------------
+!
+#include "impnone.cdk"
+#include "chm_ptopo_grid.cdk"
+!
+      integer chm_bper_len,nk
+      real F_chmbusper(chm_bper_len)
+!-----------------------------------------------------------------------------------------
+      call aq_read_lam_ic('SS01' , 'AE01', F_chmbusper, chm_bper_len,chm_l_nk)
+      call aq_read_lam_ic('SS02' , 'AE02', F_chmbusper, chm_bper_len,chm_l_nk)
+      call aq_read_lam_ic('SS03' , 'AE03', F_chmbusper, chm_bper_len,chm_l_nk)
+      call aq_read_lam_ic('SS04' , 'AE04', F_chmbusper, chm_bper_len,chm_l_nk)
+      call aq_read_lam_ic('SS05' , 'AE05', F_chmbusper, chm_bper_len,chm_l_nk)
+      call aq_read_lam_ic('SS06' , 'AE06', F_chmbusper, chm_bper_len,chm_l_nk)
+      call aq_read_lam_ic('SS07' , 'AE07', F_chmbusper, chm_bper_len,chm_l_nk)
+      call aq_read_lam_ic('SS08' , 'AE08', F_chmbusper, chm_bper_len,chm_l_nk)
+      call aq_read_lam_ic('SS09' , 'AE09', F_chmbusper, chm_bper_len,chm_l_nk)
+      call aq_read_lam_ic('SS10' , 'AE10', F_chmbusper, chm_bper_len,chm_l_nk)
+      call aq_read_lam_ic('SS11' , 'AE11', F_chmbusper, chm_bper_len,chm_l_nk)
+      call aq_read_lam_ic('SS12' , 'AE12', F_chmbusper, chm_bper_len,chm_l_nk)
+!
+      call aq_read_lam_ic('SF01' , 'AE13', F_chmbusper, chm_bper_len,chm_l_nk)
+      call aq_read_lam_ic('SF02' , 'AE14', F_chmbusper, chm_bper_len,chm_l_nk)
+      call aq_read_lam_ic('SF03' , 'AE15', F_chmbusper, chm_bper_len,chm_l_nk)
+      call aq_read_lam_ic('SF04' , 'AE16', F_chmbusper, chm_bper_len,chm_l_nk)
+      call aq_read_lam_ic('SF05' , 'AE17', F_chmbusper, chm_bper_len,chm_l_nk)
+      call aq_read_lam_ic('SF06' , 'AE18', F_chmbusper, chm_bper_len,chm_l_nk)
+      call aq_read_lam_ic('SF07' , 'AE19', F_chmbusper, chm_bper_len,chm_l_nk)
+      call aq_read_lam_ic('SF08' , 'AE20', F_chmbusper, chm_bper_len,chm_l_nk)
+      call aq_read_lam_ic('SF09' , 'AE21', F_chmbusper, chm_bper_len,chm_l_nk)
+      call aq_read_lam_ic('SF10' , 'AE22', F_chmbusper, chm_bper_len,chm_l_nk)
+      call aq_read_lam_ic('SF11' , 'AE23', F_chmbusper, chm_bper_len,chm_l_nk)
+      call aq_read_lam_ic('SF12' , 'AE24', F_chmbusper, chm_bper_len,chm_l_nk)
+!
+      call aq_read_lam_ic('BC01' , 'AE25', F_chmbusper, chm_bper_len,chm_l_nk)
+      call aq_read_lam_ic('BC02' , 'AE26', F_chmbusper, chm_bper_len,chm_l_nk)
+      call aq_read_lam_ic('BC03' , 'AE27', F_chmbusper, chm_bper_len,chm_l_nk)
+      call aq_read_lam_ic('BC04' , 'AE28', F_chmbusper, chm_bper_len,chm_l_nk)
+      call aq_read_lam_ic('BC05' , 'AE29', F_chmbusper, chm_bper_len,chm_l_nk)
+      call aq_read_lam_ic('BC06' , 'AE30', F_chmbusper, chm_bper_len,chm_l_nk)
+      call aq_read_lam_ic('BC07' , 'AE31', F_chmbusper, chm_bper_len,chm_l_nk)
+      call aq_read_lam_ic('BC08' , 'AE32', F_chmbusper, chm_bper_len,chm_l_nk)
+      call aq_read_lam_ic('BC09' , 'AE33', F_chmbusper, chm_bper_len,chm_l_nk)
+      call aq_read_lam_ic('BC10' , 'AE34', F_chmbusper, chm_bper_len,chm_l_nk)
+      call aq_read_lam_ic('BC11' , 'AE35', F_chmbusper, chm_bper_len,chm_l_nk)
+      call aq_read_lam_ic('BC12' , 'AE36', F_chmbusper, chm_bper_len,chm_l_nk)
+!
+      call aq_read_lam_ic('OC01' , 'AE37', F_chmbusper, chm_bper_len,chm_l_nk)
+      call aq_read_lam_ic('OC02' , 'AE38', F_chmbusper, chm_bper_len,chm_l_nk)
+      call aq_read_lam_ic('OC03' , 'AE39', F_chmbusper, chm_bper_len,chm_l_nk)
+      call aq_read_lam_ic('OC04' , 'AE40', F_chmbusper, chm_bper_len,chm_l_nk)
+      call aq_read_lam_ic('OC05' , 'AE41', F_chmbusper, chm_bper_len,chm_l_nk)
+      call aq_read_lam_ic('OC06' , 'AE42', F_chmbusper, chm_bper_len,chm_l_nk)
+      call aq_read_lam_ic('OC07' , 'AE43', F_chmbusper, chm_bper_len,chm_l_nk)
+      call aq_read_lam_ic('OC08' , 'AE44', F_chmbusper, chm_bper_len,chm_l_nk)
+      call aq_read_lam_ic('OC09' , 'AE45', F_chmbusper, chm_bper_len,chm_l_nk)
+      call aq_read_lam_ic('OC10' , 'AE46', F_chmbusper, chm_bper_len,chm_l_nk)
+      call aq_read_lam_ic('OC11' , 'AE47', F_chmbusper, chm_bper_len,chm_l_nk)
+      call aq_read_lam_ic('OC12' , 'AE48', F_chmbusper, chm_bper_len,chm_l_nk)
+!
+      call aq_read_lam_ic('SD01' , 'AE49', F_chmbusper, chm_bper_len,chm_l_nk)
+      call aq_read_lam_ic('SD02' , 'AE50', F_chmbusper, chm_bper_len,chm_l_nk)
+      call aq_read_lam_ic('SD03' , 'AE51', F_chmbusper, chm_bper_len,chm_l_nk)
+      call aq_read_lam_ic('SD04' , 'AE52', F_chmbusper, chm_bper_len,chm_l_nk)
+      call aq_read_lam_ic('SD05' , 'AE53', F_chmbusper, chm_bper_len,chm_l_nk)
+      call aq_read_lam_ic('SD06' , 'AE54', F_chmbusper, chm_bper_len,chm_l_nk)
+      call aq_read_lam_ic('SD07' , 'AE55', F_chmbusper, chm_bper_len,chm_l_nk)
+      call aq_read_lam_ic('SD08' , 'AE56', F_chmbusper, chm_bper_len,chm_l_nk)
+      call aq_read_lam_ic('SD09' , 'AE57', F_chmbusper, chm_bper_len,chm_l_nk)
+      call aq_read_lam_ic('SD10' , 'AE58', F_chmbusper, chm_bper_len,chm_l_nk)
+      call aq_read_lam_ic('SD11' , 'AE59', F_chmbusper, chm_bper_len,chm_l_nk)
+      call aq_read_lam_ic('SD12' , 'AE60', F_chmbusper, chm_bper_len,chm_l_nk)
+
+      call aq_read_lam_ic('ADMS' , 'AE61', F_chmbusper, chm_bper_len,chm_l_nk)
+      call aq_read_lam_ic('AH2S' , 'AE62', F_chmbusper, chm_bper_len,chm_l_nk)
+!
+!-----------------------------------------------------------------------------------------
+      return
+      end

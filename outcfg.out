@@ -1,0 +1,41 @@
+ grid=1,model; 
+ grid=2,core;
+ levels=1, eta, -1;
+ levels=2, eta, [28];
+
+ steps=1,hour,<1,23,1>; 
+ steps=2,hour, 24.0;
+ steps=3,hour,<1,24,1>; 
+
+ sortie([TT, HU, GZ, UU, VV]               , grid, 1, levels, 2, steps, 3)
+ sortie([P0, PN]                           , grid, 1, levels, 1, steps, 3)
+
+ sortie_p([RT,NT,FC,FB,FS,FI,PR,I0]        , grid, 1, levels, 1, steps, 1)
+ sortie_p([NB, NH, NM, DQ, TJ, UD, VD,RH]  , grid, 1, levels, 1, steps, 1)
+
+ sortie_c([O3,   NO,   NO2,  CO,   SO2,  PM10, PM25,C3H8, ALKA]        , grid, 1, levels, 2, steps, 1)
+ sortie_c([ATSF, ATSS, ATBC, ATOC, ATSD]                               , grid, 1, levels, 2, steps, 1)
+ sortie_c([FTSF, FTSS, FTBC, FTOC, FTSD]                               , grid, 1, levels, 2, steps, 1)
+ sortie_c([BAP1, BAP2, NH3,  NH4,  PT25, PTCO, PH25, PHCO]             , grid, 1, levels, 2, steps, 1)
+ sortie_c([PMAS, PMCD, PMPB, PMNI]                                     , grid, 1, levels, 2, steps, 1)
+ sortie_c([SS12, SF12, BC12, OC12, SD12]                               , grid, 1, levels, 2, steps, 1)
+
+ sortie_c([O3,   NO,   NO2,  CO,   SO2,  PM10, PM25,C3H8, ALKA]        , grid, 1, levels, 1, steps, 2)
+ sortie_c([ATSF, ATSS, ATBC, ATOC, ATSD]                               , grid, 1, levels, 1, steps, 2)
+ sortie_c([FTSF, FTSS, FTBC, FTOC, FTSD]                               , grid, 1, levels, 1, steps, 2)
+ sortie_c([BAP1, BAP2, NH3,  NH4,  PT25, PTCO, PH25, PHCO]             , grid, 1, levels, 1, steps, 2)
+ sortie_c([PMAS, PMCD, PMPB, PMNI]                                     , grid, 1, levels, 1, steps, 2)
+ sortie_c([SS12, SF12, BC12, OC12, SD12]                               , grid, 1, levels, 1, steps, 2)
+
+ sortie_c([O1D,              TOLU, AROM, C2H2, H2O2, FRMA]             , grid, 1, levels, 1, steps, 2)  
+ sortie_c([N2O5, PAN,  DIAL, MOOH, PAA,  HONO, HNO4, ISOP, CRES]       , grid, 1, levels, 1, steps, 2)
+ sortie_c([SO4,  BZO,  ALKE, RNO3, MOH,  ETHE, ROOH, CRG1, CRG2, MGLY] , grid, 1, levels, 1, steps, 2)
+ sortie_c([O3P,  ACTA, HNO3, RO2N, MEK,  MO2,  R2O2, C2H6]             , grid, 1, levels, 1, steps, 2)
+ sortie_c([ALD2, MCO3, NO3,  RO2R, RO2,  HCHO, HO2,  OH,   H2O]        , grid, 1, levels, 1, steps, 2)
+
+ sortie_c([SS01,SS02,SS03,SS04,SS05,SS06,SS07,SS08,SS09,SS10,SS11], grid, 1, levels, 1, steps, 2)
+ sortie_c([SF01,SF02,SF03,SF04,SF05,SF06,SF07,SF08,SF09,SF10,SF11], grid, 1, levels, 1, steps, 2)
+ sortie_c([BC01,BC02,BC03,BC04,BC05,BC06,BC07,BC08,BC09,BC10,BC11], grid, 1, levels, 1, steps, 2)
+ sortie_c([OC01,OC02,OC03,OC04,OC05,OC06,OC07,OC08,OC09,OC10,OC11], grid, 1, levels, 1, steps, 2)
+ sortie_c([SD01,SD02,SD03,SD04,SD05,SD06,SD07,SD08,SD09,SD10,SD11], grid, 1, levels, 1, steps, 2)
+ sortie_c([ADMS,AH2S]                                             , grid, 1, levels, 1, steps, 2)

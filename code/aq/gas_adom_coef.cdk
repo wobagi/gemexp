@@ -1,0 +1,23 @@
+      integer cnbcoef,cnbtemp,cnbpres,cncbet
+      integer cntcoef       ! KT
+c
+      parameter (cnbcoef=7)
+      parameter (cnbtemp=6)
+      parameter (cnbpres=5)
+      parameter (cncbet=19)
+      parameter (cntcoef=4) ! KT
+c
+      real prltemp(cnbtemp)
+      real prlpres(cnbpres)
+c
+      real prblka (cnbcoef,cnbtemp,cnbpres)
+      real prcbet (cncbet)
+c
+      real prxa,prxc,prya,pryc,prza,przc
+c
+!!!-jwk      common /adom1/ prblka,prcbet
+!!!-jwk      common /adom2/ prxa,prxc,prya,pryc,prza,przc
+c
+      data prltemp /210.0, 230.0, 250.0, 270.0, 290.0, 310.0/
+      data prlpres /0.2, 0.4, 0.6, 0.8, 1.0/
+

@@ -1,0 +1,232 @@
+      SUBROUTINE Q1Q25X(DQDT,DSDT,Q,S,QS,QU,SU,MC,DU,ALPHA,QHAT,SHAT,DP,       
+!     1                  MU,MD,SD,QD,QL,                                        
+     1                  MU,MD,SD,QD,QL,DQLDT,                                   !cam_conv
+     2                  DXDT,X,XU,XD,XHAT,ITRPHS,NTRAC,ITRAC,                  
+     3                  DSUBCLD,QDB,SDB,BETAU,BETAD,MB,LCL,JT,MX,              
+     4                  FACQ,FACS,DSDS,DQDQ,RL,                                
+     5                  FACX,DXDX,                                             
+     6                  DT,ILEV,ILG,IL1G,IL2G,CP,MSG)                          
+C
+C     * FEB 18/2004 - M.LAZARE.  NEW VERSION FOR GCM13D:
+C     *                          - "ITRPHS" PASSED IN AND USED TO CONTROL
+C     *                            SELECTIVE PHYSICS CALCULATIONS FOR TRACERS.
+C     *                          - REVISED FORMULATION TO AVOID NEGATIVE
+C     *                            VALUES OF XROW.                            
+C     * SEP 30/97 - M.LAZARE/ NEW VERSION (Q1Q25) FOR GCM12 ONWARD:           
+C     *             M.HOLZER/   - "N-TRACER" CODE ADDED (INCLUDES NEW          
+C     *             R.HARVEY/     WORK ARRAYS "FACX" AND "DXDX").              
+C     *              N.MCFARLANE.                                              
+C     * JUN 26/96 - M.LAZARE. PREVIOUS VERSION Q1Q24.                          
+C     * JUN 26/96 - M.LAZARE. - INCREASE LIMIT USED TO SET INTERFACIAL         
+C     *                         VALUES FOR S,Q (FROM 1.E-6 TO 1.E-3),          
+C     *                         IN ORDER TO ELIMINATE PATHOLOGICAL CASES.      
+C     * JAN 21/94 - M.LAZARE. PREVIOUS VERSION Q1Q23.                          
+                                                                               
+      IMPLICIT REAL (A-H,O-Z),                                                 
+     +INTEGER (I-N)                                                            
+                                                                               
+      REAL     DQDT(ILG,ILEV),   DSDT(ILG,ILEV)                                
+                                                                               
+      REAL        Q(ILG,ILEV),      S(ILG,ILEV),     QS(ILG,ILEV),             
+     1           QU(ILG,ILEV),     SU(ILG,ILEV),     MC(ILG,ILEV),             
+     2           DU(ILG,ILEV),  ALPHA(ILG,ILEV),   QHAT(ILG,ILEV),             
+     3         SHAT(ILG,ILEV),     DP(ILG,ILEV),     MU(ILG,ILEV),             
+     4           MD(ILG,ILEV),     SD(ILG,ILEV),     QD(ILG,ILEV),             
+     5           QL(ILG,ILEV)                                                  
+                                                                               
+      REAL     DXDT(ILG,ILEV,NTRAC),  X(ILG,ILEV,NTRAC),                       
+     1           XU(ILG,ILEV,NTRAC), XD(ILG,ILEV,NTRAC),                       
+     2         XHAT(ILG,ILEV,NTRAC)                                            
+      INTEGER ITRPHS(NTRAC)                                                    
+                                                                               
+      REAL  DSUBCLD(ILG),         QDB(ILG),         SDB(ILG),                  
+     1        BETAU(ILG),       BETAD(ILG),          MB(ILG)                   
+                                                                               
+      INTEGER   LCL(ILG),    JT(ILG),    MX(ILG)                               
+      REAL DQLDT(ILG,ILEV)                                            !cam_conv
+                                                                               
+C     * WORK FIELDS:                                                           
+                                                                               
+      REAL     FACQ(ILG,ILEV),   FACS(ILG,ILEV),   DSDS(ILG,ILEV),             
+     1         DQDQ(ILG,ILEV)                                                  
+                                                                               
+      REAL       RL(ILG)                                                       
+                                                                               
+      REAL     FACX(ILG,ILEV,NTRAC), DXDX(ILG,ILEV,NTRAC)                      
+C------------------------------------------------------------------------------
+      RNU=1.                                                                   
+      DO 20 K=MSG+1,ILEV                                                       
+      DO 20 IL=IL1G,IL2G                                                       
+        DSDT(IL,K)=0.                                                          
+        DQDT(IL,K)=0.                                                          
+        DQLDT(IL,K)=0.0                                               !cam_conv
+        IF(K.GE.JT(IL) .AND. K.LT.ILEV)                             THEN       
+          SDIF=0.                                                              
+          IF(S(IL,K) .GT. 0. .OR. S(IL,K+1) .GT. 0.)                           
+     1      SDIF=ABS((S(IL,K)-S(IL,K+1))/MAX(S(IL,K),S(IL,K+1)))               
+          IF(SDIF. GT. 1.E-3)                               THEN               
+            DSDS(IL,K)=   S(IL,K+1)/(S(IL,K)-S(IL,K+1))                        
+     1                 -LOG( S(IL,K)/S(IL,K+1) )                               
+     2                 *( S(IL,K+1)/(S(IL,K)-S(IL,K+1)) )**2                   
+          ELSE                                                                 
+            DSDS(IL,K)=0.5                                                     
+          ENDIF                                                                
+          QDIF=0.                                                              
+          IF(Q(IL,K) .GT. 0. .OR. Q(IL,K+1) .GT. 0.)                           
+     1      QDIF=ABS((Q(IL,K)-Q(IL,K+1))/MAX(Q(IL,K),Q(IL,K+1)))               
+          IF(QDIF .GT. 1.E-3)                               THEN               
+            DQDQ(IL,K)=   Q(IL,K+1)/(Q(IL,K)-Q(IL,K+1))                        
+     1                 -LOG( Q(IL,K)/Q(IL,K+1) )                               
+     2                 *( Q(IL,K+1)/(Q(IL,K)-Q(IL,K+1)) )**2                   
+          ELSE                                                                 
+            DQDQ(IL,K)=0.5                                                     
+          ENDIF                                                                
+          FACS(IL,K)=1./(  1.+MC(IL,K+1)*DT/DP(IL,K)*RNU*DSDS(IL,K) )          
+          FACQ(IL,K)=1./(  1.+MC(IL,K+1)*DT/DP(IL,K)*RNU*DQDQ(IL,K) )          
+        ENDIF                                                                  
+   20 CONTINUE                                                                 
+C                                                                              
+      IF(ITRAC.NE.0) THEN                                                      
+C                                                                              
+C        * PREPARE ARRAYS FOR THE IMPLICIT TIME STEPPING/SOLVER                
+C        * INITIALIZE THE TENDECY TO ZERO ON ALL LEVELS.                       
+C                                                                              
+         DO N=1,NTRAC                                                          
+           IF(ITRPHS(N).GT.0)                                     THEN         
+             DO 40 K=1,ILEV                                                    
+             DO 40 IL=IL1G,IL2G                                                
+               DXDT(IL,K,N)=0.                                                 
+   40        CONTINUE                                                          
+C                                                                              
+             DO 50 K=MSG+1,ILEV-1                                              
+             DO 50 IL=IL1G,IL2G                                                
+               IF(K.GE.JT(IL))                                    THEN         
+                 FACX(IL,K,N)=1./( 1.+DT*MC(IL,K+1)/DP(IL,K) )                 
+               ENDIF                                                           
+ 50          CONTINUE                                                          
+           ENDIF                                                               
+         ENDDO                                                                 
+      ENDIF                                                                    
+C                                                                              
+      DO 100 J=MSG+1,ILEV-1                                                    
+      DO 100 IL=IL1G,IL2G                                                      
+        IF(J.EQ.JT(IL) .AND. MB(IL).GT.0.)                          THEN       
+          RL (IL)=2.501E6                                                      
+          DSDT(IL,J)=FACS(IL,J)/DP(IL,J)                                       
+     1         * (MU(IL,J+1)*(SU(IL,J+1)-SHAT(IL,J+1)                          
+     2                             -RL(IL)/CP*QL(IL,J+1)       ) +             
+     3            MD(IL,J+1)*(SD(IL,J+1)-SHAT(IL,J+1)) )                       
+          DQDT(IL,J)=FACQ(IL,J)/DP(IL,J)                                       
+     1         * (MU(IL,J+1)*(QU(IL,J+1)-QHAT(IL,J+1)                          
+     2                             +QL(IL,J+1)                 ) +             
+     3            MD(IL,J+1)*(QD(IL,J+1)-QHAT(IL,J+1)) )                       
+        ENDIF                                                                  
+  100 CONTINUE                                                                 
+C                                                                              
+      IF (ITRAC.NE.0) THEN                                                     
+C                                                                              
+C      * COMPUTE TENDENCY FOR THE TRACERS (DXDT)                               
+C      * THIS EXACTLY MIMICKS WHAT IS DONE FOR Q                               
+C      * EXCEPT NO LIQUID PHASE (QL)                                           
+C                                                                              
+C      * DO THIS FOR TOP OF THE UPDRAFT (IF JT)                                
+C      * MB IS THE MASS FLUX AT CLOUD BASS                                     
+C                                                                              
+       DO N=1,NTRAC                                                            
+         IF(ITRPHS(N).GT.0)                                       THEN         
+           DO 150 J=MSG+1,ILEV-1                                               
+           DO 150 IL=IL1G,IL2G                                                 
+             IF(J.EQ.JT(IL) .AND. MB(IL).GT.0.)                 THEN           
+               DXDT(IL,J,N)=FACX(IL,J,N)/DP(IL,J)                              
+     1                     * ( MU(IL,J+1)*(XU(IL,J+1,N)-X(IL,J,N))             
+     2                        +MD(IL,J+1)*(XD(IL,J+1,N)-X(IL,J,N)) )           
+c               if (dxdt(il,j,n).gt.1.e-15)write(*,*)'dxdt in q1q2',il,j,n,dxdt(il,j,n),mu(il,j+1)
+             ENDIF                                                             
+  150      CONTINUE                                                            
+         ENDIF                                                                 
+       ENDDO                                                                   
+      ENDIF                                                                    
+C                                                                              
+      BETA=1.                                                                  
+      DO 200 J=MSG+1,ILEV                                                      
+      DO 200 IL=IL1G,IL2G                                                      
+        IF(J.GT.JT(IL) .AND. J.LT.MX(IL) .AND. MB(IL).GT.0.)        THEN       
+          RL (IL)=2.501E6                                                      
+          SHAT(IL,J)=SHAT(IL,J)+DSDT(IL,J-1)*DT*RNU*DSDS(IL,J-1)               
+          QHAT(IL,J)=QHAT(IL,J)+DQDT(IL,J-1)*DT*RNU*DQDQ(IL,J-1)               
+          DSDT(IL,J)=FACS(IL,J)                                                
+     1               *((MC(IL,J)*(SHAT(IL,J)-S(IL,J))                          
+     2               +MC(IL,J+1)*(S(IL,J)-SHAT(IL,J+1)))/DP(IL,J)              
+     3     -RL(IL)/CP*DU(IL,J)*(BETA*QL(IL,J)+(1-BETA)*QL(IL,J+1))  )          
+          DQDT(IL,J)=FACQ(IL,J)                                                
+     1               *((MC(IL,J)*(QHAT(IL,J)-Q(IL,J))                          
+     2               +MC(IL,J+1)*(Q(IL,J)-QHAT(IL,J+1)))/DP(IL,J)              
+     3               +DU(IL,J)*(QS(IL,J)-Q(IL,J))                              
+     4               +DU(IL,J)*(BETA*QL(IL,J)+(1-BETA)*QL(IL,J+1)) )           
+        ENDIF                                                                  
+  200 CONTINUE                                                                 
+C                                                                              
+      IF(ITRAC.NE.0) THEN                                                      
+C                                                                              
+C      * CONTINUE TO COMPUTE THE TENDENCIES FOR THE OTHER LAYERS               
+C      * BETWEEN JT AND MX                                                     
+C      * MX IS THE LAUNCHING LEVEL OF THE CLOUD BASE                           
+C      * (AGAIN THIS MIMICKS WHAT IS DONE FOR Q)                               
+C                                                                              
+       DO N=1,NTRAC                                                            
+         IF(ITRPHS(N).GT.0)                                     THEN           
+           DO 250 J=MSG+1,ILEV                                                 
+           DO 250 IL=IL1G,IL2G                                                 
+             IF(J.GT.JT(IL) .AND. J.LT.MX(IL) .AND. MB(IL).GT.0.)   THEN       
+               XHAT(IL,J,N)=X(IL,J-1,N)+DXDT(IL,J-1,N)*DT                      
+               IF ( DU(IL,J).LE.0. ) THEN                                      
+                 DXDT(IL,J,N)=FACX(IL,J,N)/DP(IL,J)                            
+     1                        *(XHAT(IL,J,N)-X(IL,J,N))*MC(IL,J)               
+               ELSE                                                            
+                 ATF= MU(IL,J)*(XHAT(IL,J,N)-XU(IL,J,N))                       
+     1               +MD(IL,J)*(XHAT(IL,J,N)-XD(IL,J,N))                       
+                 DXDT(IL,J,N)=FACX(IL,J,N)/DP(IL,J)                            
+     1                     * ( MU(IL,J+1)*(XU(IL,J+1,N)-X(IL,J,N))             
+     2                        +MD(IL,J+1)*(XD(IL,J+1,N)-X(IL,J,N))+ATF )       
+               ENDIF                                                           
+             ENDIF                                                             
+  250      CONTINUE                                                            
+         ENDIF                                                                 
+       ENDDO                                                                   
+      ENDIF                                                                    
+C                                                                              
+      DO 300 J=MSG+1,ILEV                                                      
+      DO 300 IL=IL1G,IL2G                                                      
+        IF(J.EQ.MX(IL) .AND. MB(IL).GT.0.)                          THEN       
+          SHAT(IL,J)=SHAT(IL,J)+DSDT(IL,J-1)*DT*RNU*DSDS(IL,J-1)               
+          QHAT(IL,J)=QHAT(IL,J)+DQDT(IL,J-1)*DT*RNU*DQDQ(IL,J-1)               
+          DSDT(IL,J)=(1./DSUBCLD(IL))                                          
+     1              *( MU(IL,J)*( SHAT(IL,J)-SU(IL,J))                         
+     2              +MD(IL,J)*( SHAT(IL,J)-SD(IL,J)) )                         
+          DQDT(IL,J)=(1./DSUBCLD(IL))                                          
+     1              *( MU(IL,J)*( QHAT(IL,J)-QU(IL,J))                         
+     2              +MD(IL,J)*( QHAT(IL,J)-QD(IL,J)) )                         
+        ENDIF                                                                  
+  300 CONTINUE                                                                 
+C                                                                              
+      IF(ITRAC.NE.0) THEN                                                      
+C                                                                              
+C      * NOW COMPUTE THE DETRAINMENT AT CLOUD BASE.                            
+C                                                                              
+       DO N=1,NTRAC                                                            
+         IF(ITRPHS(N).GT.0)                                     THEN           
+           DO 350 J=MSG+1,ILEV                                                 
+           DO 350 IL=IL1G,IL2G                                                 
+             IF(J.EQ.MX(IL) .AND. MB(IL).GT.0.)               THEN             
+               XHAT(IL,J,N)=X(IL,J-1,N)+DXDT(IL,J-1,N)*DT                      
+               DXDT(IL,J,N)=(1./DSUBCLD(IL))                                   
+     1                     * ( MU(IL,J)*(XHAT(IL,J,N)-XU(IL,J,N))              
+     2                        +MD(IL,J)*(XHAT(IL,J,N)-XD(IL,J,N)) )            
+             ENDIF                                                             
+  350      CONTINUE                                                            
+         ENDIF                                                                 
+       ENDDO                                                                   
+      ENDIF                                                                    
+C                                                                              
+      RETURN                                                                   
+      END                                                                      

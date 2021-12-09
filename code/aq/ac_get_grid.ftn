@@ -1,0 +1,17 @@
+!--------------------------------------------------------------------------
+      subroutine ac_get_grid(grid_type)
+!--------------------------------------------------------------------------
+#include <model_macros_f.h>
+#include "impnone.cdk"
+#include "grd.cdk"
+#include "glb_ld.cdk"
+!
+      character *2 grid_type
+!--------------------------------------------------------------------------
+      grid_type=Grd_typ_S
+!
+!     write(*,*) 'ac_get_grid: ... just type:', grid_type
+!     call flush(6)
+!--------------------------------------------------------------------------
+      return
+      end

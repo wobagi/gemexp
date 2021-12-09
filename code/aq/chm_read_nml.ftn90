@@ -1,0 +1,65 @@
+!=============================================================================
+!
+! May 2008 - jwk - modified for gem-aq
+!
+! Environnement Canada
+! Centre Meteorologique Canadian
+! 2100 Trans-Canadienne
+! Dorval, Quebec
+!
+! Projet    : GEM-MACH
+! Fichier   : chm_read_nml.ftn90
+! Creation  : S. Menard, H. Landry, A. Kallaur,  mars 2006
+! Description: Read chemical namelist "&chem_cfgs"
+!
+! Arguments: IN
+!              fn -> filename
+!            OUT
+!              out_Schm_chems_L -> TRUE if chemistry
+!
+!==============================================================================
+
+integer function chm_read_nml(fn, out_Schm_chems_L, lun_out)
+   implicit none
+  
+   character*(*), intent(in)  :: fn
+   logical,       intent(out) :: out_Schm_chems_L
+   integer,       intent(in)  :: lun_out
+!
+!     Local variables
+!
+   integer       err, unf, read_status
+   character*4   undefined
+   integer       fnom, i
+   external      fnom
+!
+!     Initialize 
+!
+   out_Schm_chems_L = .false.
+   undefined        = '*NA*'
+   unf              = 0
+   chm_read_nml     = -1
+   
+   if (lun_out > 0) then
+!     write(lun_out, *) 'GEM-AQ created on August 8, 2019, jwk for SHERPA'
+!     write(lun_out, *) 'GEM-AQ created on 14 August, 2020, jwk changes in CAM'
+      write(lun_out, *) 'GEM-AQ created on 21 September, 2020 - eco3'
+      write(lun_out, *) 'Opening file: ' ,fn
+   end if
+   if (fnom(unf, fn, 'SEQ+FTN+FMT+OLD', 0) .ne. 0) then
+         if (lun_out > 0) then
+            write(lun_out, *) 'file ', fn, ' not available - abort'  
+         end if
+      return
+   endif
+!
+!     Assign default valaues for the chem_cfgs namelist variables.
+!
+   call cc_read_nml(fn, unf,lun_out)   ! nml for gm-aq
+
+   chm_read_nml = 1
+   out_Schm_chems_L = .true.
+
+   return
+end
+

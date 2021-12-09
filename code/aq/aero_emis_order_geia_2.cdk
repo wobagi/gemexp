@@ -1,0 +1,52 @@
+!
+      INTEGER, PARAMETER :: kpos_ODMS = 1   ! monthly
+      INTEGER, PARAMETER :: kpos_LDMS = 2   ! seasonal
+      INTEGER, PARAMETER :: kpos_EH2S = 3   ! seasonal
+!
+      INTEGER, PARAMETER :: kpos_BC1E = 4  ! monthly
+      INTEGER, PARAMETER :: kpos_BC1H = 5
+      INTEGER, PARAMETER :: kpos_BC2E = 6
+      INTEGER, PARAMETER :: kpos_BC2H = 7
+      INTEGER, PARAMETER :: kpos_BC3E = 8
+      INTEGER, PARAMETER :: kpos_BC3H = 9
+      INTEGER, PARAMETER :: kpos_BC4E = 10
+      INTEGER, PARAMETER :: kpos_BC4H = 11
+      INTEGER, PARAMETER :: kpos_BC5E = 12
+      INTEGER, PARAMETER :: kpos_BC5H = 13
+!
+      INTEGER, PARAMETER :: kpos_OM1E = 14  ! monthly
+      INTEGER, PARAMETER :: kpos_OM1H = 15
+      INTEGER, PARAMETER :: kpos_OM2E = 16
+      INTEGER, PARAMETER :: kpos_OM2H = 17
+      INTEGER, PARAMETER :: kpos_OM3E = 18
+      INTEGER, PARAMETER :: kpos_OM3H = 19
+      INTEGER, PARAMETER :: kpos_OM4E = 20
+      INTEGER, PARAMETER :: kpos_OM4H = 21
+      INTEGER, PARAMETER :: kpos_OM5E = 22
+      INTEGER, PARAMETER :: kpos_OM5H = 23
+
+      INTEGER, PARAMETER :: kpos_SO01 = 1
+      INTEGER, PARAMETER :: kpos_SO02 = 2
+      INTEGER, PARAMETER :: kpos_SO03 = 3
+      INTEGER, PARAMETER :: kpos_SO04 = 4
+      INTEGER, PARAMETER :: kpos_SO05 = 5
+      INTEGER, PARAMETER :: kpos_SO06 = 6
+      INTEGER, PARAMETER :: kpos_SO07 = 7
+      INTEGER, PARAMETER :: kpos_SO08 = 8
+      INTEGER, PARAMETER :: kpos_SO09 = 9
+      INTEGER, PARAMETER :: kpos_SO10 = 10
+      INTEGER, PARAMETER :: kpos_SO11 = 11
+      INTEGER, PARAMETER :: kpos_SO12 = 12
+!
+      INTEGER, PARAMETER :: kpos_CL01 = 13
+      INTEGER, PARAMETER :: kpos_CL02 = 14
+
+      INTEGER, PARAMETER :: kpos_SA01 = 15
+      INTEGER, PARAMETER :: kpos_SA02 = 16
+      INTEGER, PARAMETER :: kpos_SA03 = 17
+      INTEGER, PARAMETER :: kpos_SA04 = 18
+      INTEGER, PARAMETER :: kpos_SA05 = 19
+      INTEGER, PARAMETER :: kpos_SA06 = 20
+!
+
+

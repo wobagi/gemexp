@@ -1,0 +1,204 @@
+!
+!  ac_load_emissions
+!
+!  modified jwk - FEB 2007
+!
+!=============================================================================
+! Environnement Canada
+! Centre Meteorologique Canadian
+! 2100 Trans-Canadienne
+! Dorval, Quebec
+!
+! Projet    : GEM-MACH
+! Fichier   : chm_load_emissions.ftn90
+! Creation  : A. Kallaur (MSC/ARQI), Octobre 2006
+! Description: Read from file (if need be) the surface
+!              biogenic, anthropogenic and major point sources.
+!
+! Arguments: IN
+!              chm_bper_siz   -> bus size
+!              chm_bper_len   -> bus lenght
+!              gem_datimeo    -> GEM date of origin
+!              gem_dt_8       -> Model time step length
+!              gem_tstep_num  -> Model time step length
+!
+!            IN-OUT
+!              chm_busper3D   -> chemistry permanent bus
+!==============================================================================
+subroutine ac_load_emissions (chm_busper3D, chm_bper_siz, chm_bper_len, &
+                                 gem_datimeo, gem_dt_8, gem_tstep_num)
+   implicit none
+
+! Arguments
+   integer, intent(in) :: gem_datimeo
+   integer, intent(in) :: gem_tstep_num
+   integer, intent(in) :: chm_bper_siz,chm_bper_len
+   real*8,  intent(in) :: gem_dt_8
+   real,    intent(in) :: chm_busper3D(chm_bper_len)
+!
+#include "chm_datime.cdk"
+#include "chm_lun.cdk"
+#include "cc_nml_vars.cdk"
+
+! need "iradia" for checking if cccmarad is used for "PAR" calculation
+#include "options.cdk"
+
+! Local variables
+   character*2   etype
+   character*3   bmf_fst
+   character*128 pe_file
+   integer       date1, date_curr(14), idummy
+   real*8        nhours
+   logical       local_dbg
+!    
+   real juliand
+   integer julian_current
+!
+   integer iread_start, iread_hour, iread_month, iread
+
+! Set debug switch
+
+   local_dbg = .false. !! .true.
+
+   if ((chm_lun_out > 0) .and. local_dbg) then
+      write(chm_lun_out, *) 'Inside  chm_load_emissions:'
+      write(chm_lun_out, *) 'gem_datimeo            : ', gem_datimeo
+      write(chm_lun_out, *) 'Model time step number : ', gem_tstep_num
+      write(chm_lun_out, *) 'Model time step length : ', gem_dt_8
+      write(chm_lun_out, *) 'chm_bper_siz           : ', chm_bper_siz
+      write(chm_lun_out, *) 'chm_bper_len           : ', chm_bper_len
+      write(chm_lun_out, *) 'chm_bper(len/siz)      : ', chm_bper_len/chm_bper_siz
+      write(chm_lun_out, *) 'chm_busper3D(1)        : ', chm_busper3D(1)
+      write(chm_lun_out, *) ' '
+   endif
+!  ____________________________________________________
+!  Calculate date/time stamp for the current model step
+!
+   nhours = dble(gem_tstep_num) * gem_dt_8 * inv_secondsin1hour
+   call incdatr(date1, gem_datimeo, nhours)
+
+   call NEWDATE(date1, date_curr, idummy, -4)         ! convert stamp to old style date array
+
+   julian_current=int(JULIAND(0.0, 0, date_curr))
+
+   iread_start=0
+   iread_hour =0
+   iread_month=0
+   iread=0
+!  __________________________________
+!  always read emissions at the start
+!
+   if(gem_tstep_num == 1) then   ! Chemistry is not done at step zero 
+      iread_start=1 
+      iread_hour =1  
+      iread_month=1
+
+      if(chm_lun_out > 0) write(*,*) 'gem_tstep_num == 1 --> read all emis+land use'
+      if(chm_lun_out > 0) call flush(6)
+
+      iread      =1
+   end if
+!
+   if(date_curr(3).eq.1.and.date_curr(5).eq.0.and.date_curr(6).eq.0) then 
+      iread_month=1  
+      iread=1
+      if(chm_lun_out > 0) write(*,*) 'new month  --> ',date_curr(3),date_curr(5)
+      if(chm_lun_out > 0) call flush(6)
+   end if 
+!
+!     ___________________________________________________
+!     initialize non-advected chemical fields at step # 1 
+
+      if(iread_start.eq.1) then 
+         if(GAS_chem_S.eq.'ADOM_CAM')   call aq_fast_species (chm_busper3D,chm_bper_len)
+         if(GAS_lam_ic_file_S.ne.'NIL') call aq_lam_ic       (chm_busper3D,chm_bper_len)
+      END IF 
+!
+!     ________________________________________________________________________
+!     EMEP-SNAP or AQMEII-SNAP emissions- read only once at the start of a run  (aqmeii removed 7-aug-2019)
+!
+      if(iread_start.eq.1) then 
+         if(GAS_emis_type.eq.'EMEP_SNAP')   call aq_read_HDD15_avr(julian_current)
+         if(GAS_emis_type.eq.'EMEP_SNAP')   call aq_read_emis_EMEP_SNAP(chm_busper3D,chm_bper_len,date_curr(2),julian_current)	! EMEP SNAP type emis
+      end if 
+!    _______________
+!    read hourly data  (aqmeii	removed	7-aug-2019)
+!
+!!     if (int(nhours) .ge. AC_delay_nh) then
+!!        if(date_curr(6).eq.0) then 
+!!           if(GAS_emis_type.eq.'AQMEII_SNAP') call  aqmeii_read_bio_emis (chm_busper3D,chm_bper_len,date1)! biogenic emissions for ALKA,ALKE,AROM,ISOP
+!!        end if 
+!!     end if
+!     _______________________________________________________________________
+!     read monthly averaged fields at start and at the begining of each month  
+!
+!     _____________________
+!     monthly stuff to read 
+!
+      if(iread_month.eq.1) then 
+         call aq_read_landuse(chm_busper3D,chm_bper_len,date_curr(2))   ! month is not used .. for now .. but keep reading it every month
+
+	 if(chm_lun_out > 0) write(*,*) 'back from landuse'
+	 if(chm_lun_out > 0) call flush (6)
+
+!
+!!       if(GAS_emis_type.eq.'EMEP_JS_4L_12M')  call aq_read_emis_EMEP_JS_4L_12M(chm_busper3D,chm_bper_len,date_curr(2),julian_current) ! EMEP monthly emis 
+!
+         if(GAS_emis_type.eq.'GEIA_12M')        call aq_read_emis_sfc      (chm_busper3D,chm_bper_len,date_curr(2)) ! GEIA monthly gas emis 
+
+         if(GAS_emis_type.eq.'EMEP_TOTAL')      call aq_read_emis_sfc      (chm_busper3D,chm_bper_len,date_curr(2)) ! EMEP total .. no monthly variation
+!
+         if(GAS_top_lev_file_S.NE.'NIL')        call aq_read_top           (chm_busper3D,chm_bper_len,date_curr(2)) ! HALOE/CMAM montlhy top replacement
+!
+!!       if(Schm_aviat_S.eq.'AERO2K')           call cc_read_emis_aviation (chm_busper3D,chm_bper_len,date_curr(2)) ! monthly aviation emissions
+!!       if(Schm_hetc_S.eq.'JJ_01')             call cc_read_csa           (chm_busper3D,chm_bper_len,date_curr(2)) ! monthly aerosol surface area 
+!
+         if(AEROSOL_model.eq.'CAM') then
+            call cam_set_gem
+            call aero_read_emis_geia   (chm_busper3D,chm_bper_len,date_curr(2)) ! monthly/seasonal globa aerosol stuff
+            if(GAS_lam_ic_file_S.ne.'NIL') call aero_lam_ic(chm_busper3D,chm_bper_len)
+            call aod_load_xsections
+	 end if 
+!
+      endif
+!
+! SORGAM .. for now ... unconditional ....
+!
+!!!!!!!      if(SORGAM_emis_file_S.ne.'NIL')  call sorgam_read_emis (chm_busper3D,chm_bper_len,date_curr(2)) 
+!
+!  megan: read ef, pft & lai fields and initialize 15-day mean fields
+
+   if(GAS_emis_bio_S == 'MEGAN') then
+      if(gem_tstep_num.eq.0) then
+         if ( iradia.ne.3 ) then
+            write(*,*)'WARNING: cccmarad MUST be used for calculating PAR (~400-700nm) needed for GEMv332/MEGAN'
+            call flush(6)
+!!!            call abort !- simple abort doesn't work for restart on linux systems
+         end if
+!!         call cc_init_15d_average(chm_busper3D,chm_bper_len,date_curr(2)) ! initialize the past 15-day average fields
+      end if
+!!      if(iread.eq.1) call aq_read_megan(chm_busper3D,chm_bper_len) ! MEGAN online biogenic emis EF/PFT/LAI base climatology
+   endif
+!
+!
+   if(iread.eq.1) then 
+      if ((chm_lun_out > 0) .and. local_dbg) then
+         write(chm_lun_out, *) 'Inside  chm_load_emissions:'
+         write(chm_lun_out, *) 'date_curr(2) (month)   : ', date_curr(2)
+         write(chm_lun_out, *) 'date_curr(3) (day)     : ', date_curr(3)
+         write(chm_lun_out, *) 'date_curr(5) (hour)    : ', date_curr(5)
+         write(chm_lun_out, *) 'date_curr(6) (sec*100) : ', date_curr(6)
+         write(chm_lun_out, *) 'nhours                 : ', nhours
+         write(chm_lun_out, *) 'julian_current         : ', julian_current
+         write(chm_lun_out, *) ' '
+      endif
+   end if 
+
+!  initialize 24h average fields
+!  not used for now    if(gem_tstep_num == 0) call cc_init_24h_average(chm_busper3D,chm_bper_len)
+!
+
+
+   return
+end
+

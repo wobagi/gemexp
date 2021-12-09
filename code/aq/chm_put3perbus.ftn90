@@ -1,0 +1,115 @@
+!
+!  use for st1 ... jwk feb 2007  
+!
+!=============================================================================
+! Environnement Canada
+! Centre Meteorologique Canadian
+! 2100 Trans-Canadienne
+! Dorval, Quebec
+!
+! Projet    : GEM-MACH
+! Fichier   : 
+! Creation  : H. Landry, S. Menard, A. Kallaur - mai 2006
+! Description: 
+!
+! Arguments: IN
+!            OUT
+!             
+!
+!==============================================================================
+subroutine chm_put3perbus(field,l_ni,l_nj,l_nk,chm_busper3D,chm_bper_len,nmvr)
+   implicit none
+!
+!     Declare subroutine argument list       
+!
+   character*4 nmvr
+   integer     l_ni,l_nj,l_nk,chm_bper_len
+   real        field(l_ni,l_nj,l_nk),chm_busper3D(chm_bper_len)
+!
+!     Declare common block imports
+!
+#include "chm_buses.cdk"
+#include "chm_lun.cdk"
+#include "chm_ptopo_grid.cdk"
+!
+!     Declare external function variables
+!
+   integer  longueur
+   external longueur
+!
+!     Declare local variables
+!
+   integer i,j,k,pid,mul,offc,ii,jj,index
+   logical local_dbg
+!
+!    Set local debug switch
+!
+   local_dbg = .false.!!.true.
+
+!   write(*,*)'chm_lun_out=',chm_lun_out
+
+   if ((chm_lun_out > 0) .and. local_dbg) then
+      write(chm_lun_out, *) 'Inside chm_put3perbus'
+      write(chm_lun_out, *) 'Info. from chm_buses.cdk:'
+      write(chm_lun_out, *) 'chmpertop : ', chmpertop
+      do i=1,chmpertop
+         write(chm_lun_out, 10)  chmpernm (i, 2)(1:longueur(chmpernm (i, 2))), &
+                                 chmperpar(i, 1), chmperpar(i, 2),chmperpar(i, 3), &
+                                 chmperpar(i, 4), chmperpar(i, 5),chmperpar(i, 6), &
+                                 chmperpar(i, 7)
+      enddo
+   endif
+!
+!     Locate the offset index for the specie in question.
+!
+
+   pid=-1  ! jwk
+   do i = 1, chmpertop
+      if (chmpernm(i, 2)(1:longueur(chmpernm (i,2))) == nmvr) then
+         pid = i
+      end if
+   enddo
+   if ((chm_lun_out > 0) .and. local_dbg) then
+      write(chm_lun_out, *) 'Offset for ', nmvr, ' found at ', pid
+   end if
+!
+   if(pid.eq.-1) then
+      write(*,*) 'chm_put3perbus: field not located ',nmvr,' ..aborting'
+      call flush(6)
+      call abort
+   end if 
+
+   if (chm_lun_out > 0) write(*,*) 'chm_ni,chm_nj,chm_offi,chm_offj',chm_ni,chm_nj,chm_offi,chm_offj
+   if (chm_lun_out > 0) write(*,*) 'chm_l_i0,chm_l_j0',chm_l_i0,chm_l_j0
+
+   do j = 1, chm_nj
+      do mul = 1, chmperpar(pid, 6)
+         offc = chmperpar(pid, 1) + (mul - 1) * chm_ni + (j - 1) * chm_ni*l_nk * chmpertop
+         jj = chm_l_j0 + j - 1 + chm_offj          
+         do k=1,l_nk
+            do i = 1, chm_ni
+               index = (k-1)*chm_ni+i-1
+               ii = chm_l_i0 +i -1 + chm_offi
+               chm_busper3D(offc + index) = field(ii,jj,k)
+!!	       write(*,*) 'chm_put3perbus:',ii,jj,offc,index
+            end do
+         enddo
+      enddo
+   enddo
+
+ 
+ 10   format(/,'name    bgad   len  idyn  stag ln/ml   mul nmlev'/,a4,2x,7i6,/)
+   return
+end
+!      
+! CHMPERPAR    (1) : beginning of each field within the permanent bus
+!              (2) : length    "   "     "      "    "     "      "
+!              (3) : 0 if the field needs not be initialized by the dynamics
+!                    1 "   "    "   must  be initialized by the dynamics
+!              (4) : 0 if the field is NOT on a staggered vertical grid
+!                  : 1 if the field is     on a staggered vertical grid
+!              (5) : length of each field divided by multiplicity factor
+!                    (either ni or ni*nk)
+!              (6) : multiplicity factor
+!              (7) : number of levels (1 or nk)
+!

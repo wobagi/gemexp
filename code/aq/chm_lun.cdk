@@ -1,0 +1,18 @@
+!
+!**comdeck chm_lun.cdk
+!
+!     Declare variables that will indicated
+!     various file unit numbers.
+!
+!     Name              Description
+!===========================================================
+!     chm_lun_out       file unit where diagnostic messaging
+!                       is written. This is a VERY important
+!                       variable. It is only defined (>0) for
+!                       one processor, thus permitting the emilination
+!                       of the "jumbled" output when in NP>1 mode.
+!
+      integer chm_lun_out
+
+      common / chm_luns / chm_lun_out
+

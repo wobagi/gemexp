@@ -1,0 +1,229 @@
+      SUBROUTINE BUOYAN6(Q,T,P,Z,SHB,ILEV,ILG,IL1,IL2,TP,QSTP,TL,       
+     1                  CAPE,PBLT,LCL,LEL,LON,MX,RD,GRAV,CP,MSG,ILEVM,  
+     2                  TV,TPV,BUOY,FACT,                               
+     3                  A1,A2,ESTP,PL,PLEXP,                            
+     4                  HMAX,HMN,RL,Y,PMAX,
+     5                  TMAX,QMAX,IDOC,IFLAG,KNT,                       
+     6                  LELTEN                                       )
+
+C     * NOV 10/99 - M.LAZARE/    NEW VERSION FOR GCM13. SPECIAL CARE
+C     *             N.MCFARLANE. TAKEN TO HANDLE CASES WHERE EST.GE.P.
+C     * SEP 30/97 - M.LAZARE/ PREVIOUS VERSION BUOYAN5 FOR GCM12.
+C     *             M.HOLZER/ 
+C     *             R.HARVEY/ 
+C     *             N.MCFARLANE.
+C     * JUN 26/96 - M.LAZARE. PREVIOUS VERSION BUOYAN4 FOR GCM11.
+C     * NOV 29/94 - M.LAZARE. PREVIOUS VERSION BUOYAN3 FOR GCM10.
+                                                                        
+      IMPLICIT REAL (A-H,O-Z),
+     +INTEGER (I-N)
+
+      REAL      Q(ILG,ILEV),     T(ILG,ILEV),       P(ILG,ILEV),        
+     1          Z(ILG,ILEV),   SHB(ILG,ILEV),      TP(ILG,ILEV),        
+     2       QSTP(ILG,ILEV)                                             
+                                                                        
+      REAL     TL(ILG),   CAPE(ILG),     PBLT(ILG)                      
+                                                                        
+      INTEGER LCL(ILG),    LEL(ILG),      LON(ILG),      MX(ILG)        
+                                                                        
+C     * WORK FIELDS:                                                              
+                                                                        
+      REAL     TV(ILG,ILEV),   TPV(ILG,ILEV),    BUOY(ILG,ILEV),
+     1       FACT(ILG,ILEV)                   
+                                                                        
+      REAL     A1(ILG),     A2(ILG),     ESTP(ILG),       PL(ILG),      
+     1      PLEXP(ILG),   HMAX(ILG),      HMN(ILG),       RL(ILG),      
+     2          Y(ILG),   PMAX(ILG),     TMAX(ILG),     QMAX(ILG)       
+                                                                        
+      INTEGER  IDOC(ILG),  IFLAG(ILG),   KNT(ILG),   LELTEN(ILG,5)
+
+      COMMON/EPS   / A,B,EPS1,EPS2                                      
+      COMMON/HTCP  / TFREEZ,T2S,AI,BI,AW,BW,SLP                         
+C-----------------------------------------------------------------------
+      DO 50 N=1,5                                                       
+      DO 50 IL=IL1,IL2                                                  
+        LELTEN(IL,N)=ILEV                                               
+   50 CONTINUE                                                          
+C                                                                                 
+      DO 100 IL=IL1,IL2                                                 
+        LON(IL)=ILEV-1                                                  
+        IFLAG(IL)=0                                                     
+        KNT(IL)=0                                                       
+        IDOC(IL)=1                                                      
+        LEL(IL)=ILEV                                                    
+        MX(IL)=LON(IL)                                                  
+        CAPE(IL)=0.                                                     
+        HMAX(IL)=0.                                                     
+  100 CONTINUE      
+C                                                                                 
+C     * SET "LAUNCHING" LEVEL(MX) TO BE AT MAXIMUM MOIST STATIC ENERGY.          
+C     * SEARCH FOR THIS LEVEL STOPS AT PLANETARY BOUNDARY LAYER TOP.              
+C                   
+      DO 150 L=ILEV,MSG+1,-1                                            
+      DO 150 IL=IL1,IL2                                                 
+C       RL (IL)=(2.501-.00237*(T(IL,L)-TFREEZ))*1.E6                              
+        RL (IL)=2.501E6                                                 
+        HMN(IL)=CP*T(IL,L)+GRAV*Z(IL,L)+RL(IL)*Q(IL,L)                  
+        IF(L.GE.NINT(PBLT(IL)) .AND. L.LE.LON(IL) .AND.                 
+     1     HMN(IL).GT.HMAX(IL)                            )      THEN   
+          HMAX(IL)=HMN(IL)                                              
+          MX (IL)=L                                                     
+        ENDIF                                                           
+  150 CONTINUE      
+C
+C     * DEFINE P,T,Q AT MX TO AVOID MULTIPLE GATHERS IN SUBSEQUENT
+C     * LOOPS.
+C
+      DO 155 IL=IL1,IL2
+        PMAX(IL)=P(IL,MX(IL))
+        QMAX(IL)=Q(IL,MX(IL))
+        TMAX(IL)=T(IL,MX(IL))
+  155 CONTINUE
+C
+C     * CALCULATE PRESSURE AT LCL.
+C     * IF LCL IS ABOVE THE NOMINAL LEVEL OF NON-DIVERGENCE (600 MBS),            
+C     * NO DEEP CONVECTION IS PERMITTED (ENSUING CALCULATIONS                     
+C     * SKIPPED AND CAPE RETAINS INITIALIZED VALUE OF ZERO).                      
+C
+      DO 160 IL=IL1,IL2                                                 
+        LCL(IL)=MX(IL)                                                  
+        E=PMAX(IL) * QMAX(IL) / (EPS1 + QMAX(IL))                  
+        TL(IL)=2840./(3.5*LOG(TMAX(IL))-LOG(E)-4.805)+55.               
+        IF(TL(IL).LT.TMAX(IL))                            THEN          
+          PLEXP(IL) =(1./(0.2854*(1.-0.28*QMAX(IL))))                   
+          PL(IL)=PMAX(IL) * (TL(IL)/TMAX(IL)) ** PLEXP(IL)              
+        ELSE                                                            
+          TL(IL)=TMAX(IL)                                               
+          PL(IL)=PMAX(IL)                                               
+        ENDIF
+        IF(PL(IL).LT.600.)                               IDOC(IL)=0     
+  160 CONTINUE      
+C                                                                                 
+C       * DETERMINE LEVEL INDEX OF LIFTING CONDENSATION LEVEL (LCL).                             
+C                   
+      DO 170 K=ILEV,MSG+2,-1                                            
+      DO 170 IL=IL1,IL2                                                 
+        IF(K.LE.MX(IL)       .AND.                                      
+     1    (P(IL,K).GT.PL(IL) .AND. P(IL,K-1).LE.PL(IL)) )      THEN     
+          LCL(IL)=K-1                                                   
+        ENDIF                                                           
+  170 CONTINUE
+C                                                                                 
+C     * INITIALIZE PARCEL PROPERTIES IN SUB-CLOUD LAYER BELOW LCL.                
+C                                  
+      DO 180 K=ILEV,MSG+1,-1                                            
+      DO 180 IL=IL1,IL2                                                 
+        IF(K.GT.LCL(IL) .AND. K.LE.MX(IL) .AND. IDOC(IL).NE.0)   THEN   
+          TV  (IL,K)=T(IL,K)*(1.+1.608*Q(IL,K))/                        
+     1                     (1.+Q(IL,K))                                 
+          QSTP(IL,K)=QMAX(IL)                                           
+          TP  (IL,K)=TMAX(IL)*(P(IL,K)/PMAX(IL))                        
+     1               **(0.2854*(1.-0.28*QMAX(IL)))                      
+          TPV (IL,K)=TP(IL,K)*(1.+1.608*QMAX(IL))/                      
+     1                     (1.+QMAX(IL))                                
+          BUOY(IL,K)=TPV(IL,K)-TV(IL,K)
+          FACT(IL,K)=RD*BUOY(IL,K)*LOG(SHB(IL,K)/SHB(IL,K-1))  
+        ENDIF                                                           
+  180 CONTINUE      
+C                                                                                 
+C     * DEFINE PARCEL PROPERTIES AT LCL (I.E. LEVEL IMMEDIATELY ABOVE             
+C     * PL).                                                                      
+C                   
+      DO 190 K=ILEV,MSG+1,-1                                            
+      DO 190 IL=IL1,IL2                                                 
+        IF(K.EQ.LCL(IL) .AND. IDOC(IL).NE.0)                  THEN      
+          TV  (IL,K)=T(IL,K)*(1.+1.608*Q(IL,K))/(1.+Q(IL,K))            
+          QSTP(IL,K)=QMAX(IL)                                           
+          TP  (IL,K)=TL(IL)*(P(IL,K)/PL(IL))                            
+     1               **(0.2854*(1.-0.28*QSTP(IL,K)))                    
+          ESTP(IL)  =EXP(A-B/TP(IL,K))                                  
+          QSTP(IL,K)=EPS1*ESTP(IL)/(P(IL,K)-ESTP(IL))                   
+C         RL(IL)    =(2.501-.00237*(TP(IL,K)-TFREEZ))*1.E6                        
+          RL(IL)    =2.501E6                                            
+          A1(IL)    =CP/RL(IL)+QSTP(IL,K)*(1.+QSTP(IL,K)                
+     1               /EPS1)*RL(IL)*EPS1/(RD*TP(IL,K)**2)                
+          A2(IL)    =.5*(QSTP(IL,K)*(1.+2./EPS1*QSTP(IL,K))             
+     1               *(1.+QSTP(IL,K)/EPS1)*EPS1**2*                     
+     2               RL(IL)**2/(RD**2*TP(IL,K)**4)                      
+     3               -QSTP(IL,K)*(1.+QSTP(IL,K)/EPS1)*2.*EPS1*RL(IL)    
+     4               /(RD*TP(IL,K)**3))                                 
+          A1(IL)    =1./A1(IL)                                          
+          A2(IL)    =-A2(IL)*A1(IL)**3                                  
+          Y(IL)     =QMAX(IL)-QSTP(IL,K)                                
+          TP(IL,K)  =TP(IL,K) + A1(IL)*Y(IL) + A2(IL)*Y(IL)**2          
+          ESTP(IL)  =EXP(A-B/TP(IL,K))                                  
+          QSTP(IL,K)=EPS1*ESTP(IL)/(P(IL,K)-ESTP(IL))                   
+          TPV(IL,K) =TP(IL,K)*(1.+1.608*QSTP(IL,K))/(1.+QMAX(IL))       
+          BUOY(IL,K)=TPV(IL,K)-TV(IL,K)
+          FACT(IL,K)=RD*BUOY(IL,K)*LOG(SHB(IL,K)/SHB(IL,K-1))  
+        ENDIF                                                           
+  190 CONTINUE                                                          
+C
+C     * MAIN BUOYANCY CALCULATION.                                                
+C                   
+      DO 200 K=ILEV-1,MSG+2,-1                                          
+      DO 200 IL=IL1,IL2                                                 
+        IF(K.LT.LCL(IL) .AND. IDOC(IL).NE.0)                  THEN      
+          TV  (IL,K)=T(IL,K)*(1.+1.608*Q(IL,K))/(1.+Q(IL,K))            
+          QSTP(IL,K)=QSTP(IL,K+1)                                       
+          TP  (IL,K)=TP(IL,K+1)*(P(IL,K)/P(IL,K+1))                     
+     1               **(0.2854*(1.-0.28*QSTP(IL,K)))                    
+          ESTP(IL)  =EXP(A-B/TP(IL,K))     
+          IF(ESTP(IL).LT.P(IL,K)) THEN                                 
+            QSTP(IL,K)=EPS1*ESTP(IL)/(P(IL,K)-ESTP(IL))                 
+C           RL(IL)    =(2.501-.00237*(TP(IL,K)-TFREEZ))*1.E6                        
+            RL(IL)    =2.501E6                                          
+            A1(IL)    =CP/RL(IL)+QSTP(IL,K)*(1.+QSTP(IL,K)              
+     1                 /EPS1)*RL(IL)*EPS1/(RD*TP(IL,K)**2)              
+            A2(IL)    =.5*(QSTP(IL,K)*(1.+2./EPS1*QSTP(IL,K))           
+     1                 *(1.+QSTP(IL,K)/EPS1)*EPS1**2*                   
+     2                 RL(IL)**2/(RD**2*TP(IL,K)**4)                    
+     3                 -QSTP(IL,K)*(1.+QSTP(IL,K)/EPS1)*2.*EPS1*RL(IL)  
+     4                 /(RD*TP(IL,K)**3))                               
+            A1(IL)    =1./A1(IL)                                        
+            A2(IL)    =-A2(IL)*A1(IL)**3                                
+            Y(IL)     =QSTP(IL,K+1)-QSTP(IL,K)                          
+            TP(IL,K)  =TP(IL,K) + A1(IL)*Y(IL) + A2(IL)*Y(IL)**2        
+            ESTP(IL)  =EXP(A-B/TP(IL,K))                                
+            QSTP(IL,K)=EPS1*ESTP(IL)/(P(IL,K)-ESTP(IL))                 
+            TPV(IL,K) =TP(IL,K)*(1.+1.608*QSTP(IL,K))/(1.+QMAX(IL))     
+            BUOY(IL,K)=TPV(IL,K)-TV(IL,K)
+            FACT(IL,K)=RD*BUOY(IL,K)*LOG(SHB(IL,K)/SHB(IL,K-1))  
+          ELSE
+            TPV(IL,K)=TV(IL,K)
+            BUOY(IL,K)=0.
+            FACT(IL,K)=0.
+            IDOC(IL)=K
+          ENDIF
+        ENDIF                                                           
+  200 CONTINUE                                                          
+C
+      DO 300 K=MSG+2,ILEV                                               
+      DO 300 IL=IL1,IL2                                                 
+        IF(K.LT.LCL(IL) .AND. KNT(IL).EQ.0 .AND.
+     1     IDOC(IL).NE.0 .AND. K.GT.IDOC(IL))  THEN
+          IF(BUOY(IL,K+1).GT.0. .AND. BUOY(IL,K).LE.0.)        THEN     
+            KNT(IL)=1                                                   
+            LEL(IL)=K                                                  
+          ENDIF                                                         
+        ENDIF                                                           
+  300 CONTINUE       
+C                                                                                 
+C     * CALCULATE CONVECTIVE AVAILABLE POTENTIAL ENERGY (CAPE).                   
+C                    
+      DO 400 L=MSG+1,ILEV                                               
+      DO 400 IL=IL1,IL2                                                 
+        IF(IDOC(IL).NE.0 .AND. L.GT.IDOC(IL) .AND.
+     1     L.LT.MX(IL) .AND. L.GE.LEL(IL))      THEN                    
+          CAPE(IL)=CAPE(IL)+FACT(IL,L)
+        ENDIF                                                           
+  400 CONTINUE
+C                                                                                 
+C     * PUT LOWER BOUND ON CAPE FOR DIAGNOSTIC PURPOSES.                          
+C                    
+      DO 500 IL=IL1,IL2                                                 
+        CAPE(IL)=MAX(CAPE(IL),0.)                                       
+  500 CONTINUE                                                          
+                     
+      RETURN                                                            
+      END

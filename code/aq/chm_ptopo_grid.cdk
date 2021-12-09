@@ -1,0 +1,53 @@
+! *
+! ***comdeck chm_ptopo_grid.cdk
+! *
+! *   Declare domain topology and local
+! *   grid sizes (horizontal only for now)
+! *   that were passed from GEM in order
+! *   to create BMF files for emissions.  
+! *
+! *   Name             Description        
+! *   
+! *    c_Ptopo_npex    GEM equiv. to Ptopo_npex (# of procs in x dir.)
+! *    c_Ptopo_npey    GEM equiv. to Ptopo_npey (# of procs in y dir.)
+! *    c_Ptopo_mycol   GEM equiv. to Ptopo_mycol
+! *    c_Ptopo_myrow   GEM equiv. to Ptopo_myrow
+! *    chm_ni          GEM equiv. to p_ni  (local x size - from physics)
+! *    chm_nj          GEM equiv. to p_nj  (local y size - from physics)
+! *    chm_offi        GEM equiv. to p_offi  (X-offset to local x size - from physics)
+! *    chm_offj        GEM equiv. to p_offj  (Y-offset to local y size - from physics)
+! *    chm_G_ni        GEM equiv. to G_ni global # of grid points along X  (scalar grid)
+! *    chm_G_nj        GEM equiv. to G_nj global # of grid points along Y  (scalar grid)
+! *    chm_l_nk        GEM equiv. to l_nk global # of grid points along vertical
+! *    chm_l_i0        GEM equiv. to l_i0 left   global index of local subdomain 
+! *    chm_l_j0        GEM equiv. to l_j0 bottom global index of local subdomain
+! *    chm_north       GEM equiv. to north =1 if touching north boundary for LAM 
+! *    chm_east        GEM equiv. to east  =1 if touching east  boundary for LAM 
+! *    chm_west        GEM equiv. to west  =1 if touching west  boundary for LAM 
+! *    chm_south       GEM equiv. to south =1 if touching south boundary for LAM 
+! *    chm_l_ni        GEM equiv. to l_ni
+! *    chm_l_nj        GEM equiv. to l_nj
+! *    chm_l_nk        GEM equiv. to l_nk
+! *    c_pni           GEM equiv. to pni
+! *
+! *
+! *
+! * 
+! *
+      integer c_Ptopo_npex,c_Ptopo_npey
+      integer c_Ptopo_mycol,c_Ptopo_myrow
+      integer chm_ni,chm_nj,c_pni
+      integer chm_offi,chm_offj
+      integer chm_l_ni,chm_l_nj,chm_l_nk
+      integer chm_G_ni,chm_G_nj,chm_G_nk
+      integer chm_l_i0,chm_l_j0
+      integer chm_north,chm_east,chm_west,chm_south
+      
+      common / chm_ptopo_grid / c_Ptopo_npex ,c_Ptopo_npey ,   &
+                                c_Ptopo_mycol,c_Ptopo_myrow,   &
+                                chm_ni,chm_nj,c_pni,           &
+                                chm_offi,chm_offj,             &
+                                chm_l_ni,chm_l_nj,chm_l_nk,    &
+                                chm_G_ni,chm_G_nj,chm_G_nk,    &
+                                chm_l_i0,chm_l_j0,             &
+                                chm_north,chm_east,chm_west,chm_south

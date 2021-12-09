@@ -1,0 +1,84 @@
+!
+!  modified jwk - FEB 2007
+!
+!=============================================================================
+! Environnement Canada
+! Centre Meteorologique Canadian
+! 2100 Trans-Canadienne
+! Dorval, Quebec
+!
+! Projet    : GEM-MACH
+! Fichier   : chm_load_emissions.ftn90
+! Creation  : A. Kallaur (MSC/ARQI), Octobre 2006
+! Description: Read from file (if need be) the surface
+!              biogenic, anthropogenic and major point sources.
+!
+! Arguments: IN
+!              chm_bper_siz   -> bus size
+!              chm_bper_len   -> bus lenght
+!              gem_datimeo    -> GEM date of origin
+!              gem_dt_8       -> Model time step length
+!              gem_tstep_num  -> Model time step length
+!
+!            IN-OUT
+!              chm_busper3D   -> chemistry permanent bus
+!==============================================================================
+subroutine chm_load_emissions (chm_busper3D, chm_bper_siz, chm_bper_len, &
+                                 gem_datimeo, gem_dt_8, gem_tstep_num)
+   implicit none
+
+! Arguments
+   integer, intent(in) :: gem_datimeo
+   integer, intent(in) :: gem_tstep_num
+   integer, intent(in) :: chm_bper_siz,chm_bper_len
+   real*8,  intent(in) :: gem_dt_8
+   real,    intent(in) :: chm_busper3D(chm_bper_len)
+!
+#include "chm_datime.cdk"
+#include "chm_lun.cdk"
+#include "cc_nml_vars.cdk"
+
+! Local variables
+   character*2   etype
+   character*3   bmf_fst
+   character*128 pe_file
+   integer       date1, date_curr(14), idummy
+   real*8        nhours
+   logical       local_dbg
+!    
+   real juliand
+   integer julian_current
+!
+   integer iread_start, iread_hour, iread_month, iread
+
+! Set debug switch
+
+   local_dbg = .false. !! .true.
+
+
+!   if(GAS_emis_type.eq.'QCDRTY') then 
+!      call ptracer_load_emissions (chm_busper3D, chm_bper_siz, chm_bper_len, &
+!                                   gem_datimeo, gem_dt_8, gem_tstep_num)
+!   else if(GAS_emis_type.eq.'PTRACER2') then 
+!      return!
+!
+!   else 
+
+      call pt2mx_load_emissions(chm_busper3D,chm_bper_siz,chm_bper_len,gem_datimeo,gem_dt_8,gem_tstep_num)
+      call ac_load_emissions (chm_busper3D,chm_bper_siz,chm_bper_len,gem_datimeo,gem_dt_8,gem_tstep_num)	
+
+!   end if 
+
+!-alex --------------------------------------------------------------------
+!  read BB emissions if file specified in gem_settings
+!     if(GAS_emis_bb_file_S .ne.'NIL') then
+!         ! temporal resolution of emissions in GAS_emis_bb_dt_S: '1M' '8D' '1D'
+!         call bb_load_emis (chm_busper3D, chm_bper_siz, chm_bper_len, &
+!                            gem_datimeo, gem_dt_8, gem_tstep_num)
+!     end if
+!  end BB
+!-alex --------------------------------------------------------------------
+
+   return
+end
+
